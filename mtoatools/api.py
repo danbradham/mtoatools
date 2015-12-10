@@ -139,4 +139,17 @@ class MatteAOV(object):
 
     @classmethod
     def ls(cls):
-        return pmc.ls('*.is_aov_matte', r=True, objectsOnly=True)
+        aovs = []
+        for node in pmc.ls('*.is_aov_matte', r=True, objectsOnly=True):
+            aov.append(cls(node, node.defaultValue.inputs()[0]))
+        return aovs
+
+
+def show_matte_aov_ui(instance=[]):
+    from .ui.controllers import MatteController
+    if not instance:
+        instance.append(MatteController())
+
+    controller = instance[0]
+    controller.show()
+    return controller
