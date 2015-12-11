@@ -239,8 +239,8 @@ class MatteController(MatteDialog):
         self.maya_hooks.add_about_to_delete_callback(node, del_callback)
 
     def refresh_matte_list(self):
-        self.obj_list.clear()
         self.matte_list.clear()
+        self.obj_list.clear()
 
         for aov in MatteAOV.ls():
             self.new_matte_item(aov)
@@ -248,6 +248,7 @@ class MatteController(MatteDialog):
     def refresh_obj_list(self):
         self.maya_hooks.clear_callbacks()
         self.obj_list.clear()
+
         for color, nodes in self.aov:
             for node in nodes:
                 self.new_obj_item(node, color)

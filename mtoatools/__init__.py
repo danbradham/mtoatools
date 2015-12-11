@@ -9,10 +9,4 @@ __license__ = 'MIT'
 __description__ = 'Arnold for Autodesk Maya tools'
 
 
-try:
-    from maya import cmds
-    cmds.loadPlugin('mtoa', quiet=True)
-except RuntimeError:
-    raise ImportError('Arnold plugin failed to load or does not exist...')
-
 from .api import *

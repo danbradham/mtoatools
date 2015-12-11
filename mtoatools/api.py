@@ -1,10 +1,9 @@
 from operator import itemgetter
 from collections import defaultdict
 import pymel.core as pmc
-from mtoa import aovs, core
 from .utils import add_vector_attr, get_next_name
 
-__all__ = ['Defaults', 'create_aov', 'MatteAOV']
+__all__ = ['Defaults', 'MatteAOV', 'create_aov', 'show_matte_aov_ui']
 
 
 class Defaults(object):
@@ -50,8 +49,9 @@ def create_aov(name, _type):
     :param name: Name of the new aov
     :param _type: Type of the aov to create
     '''
+    import mtoa.aovs
 
-    return aovs.AOVInterface().addAOV(name, aovType=_type)
+    return mtoa.aovs.AOVInterface().addAOV(name, aovType=_type)
 
 
 class MatteAOV(object):

@@ -20,8 +20,8 @@ def get_icon(name, cache={}):
     if name in cache:
         return cache[name]
 
-    off = ui_path(name + '.png')
-    on = ui_path(name + '_pressed.png')
+    off = ui_path('icons', name + '.png')
+    on = ui_path('icons', name + '_pressed.png')
 
     icon = QtGui.QIcon()
     size = QtCore.QSize(24, 24)
@@ -124,6 +124,10 @@ class Header(QtGui.QWidget):
         self.layout.setContentsMargins(20, 0, 20, 0)
         self.setLayout(self.layout)
 
+        self.icon = QtGui.QLabel()
+        self.icon.setFixedSize(32, 32)
+        self.icon.setPixmap(QtGui.QPixmap(ui_path('icons', 'icon.png')))
+
         self.label = QtGui.QLabel(text)
         self.label.setObjectName('header_label')
 
@@ -132,6 +136,7 @@ class Header(QtGui.QWidget):
         self.button_refresh.setToolTip('Refresh')
         self.button_refresh.setObjectName('refresh')
 
+        self.layout.addWidget(self.icon)
         self.layout.addWidget(self.label)
         self.layout.addWidget(self.button_refresh)
 
@@ -165,9 +170,6 @@ class MatteDialog(QtGui.QDialog):
         self.button_add = QtGui.QPushButton(get_icon('plus'), '')
         self.button_add.setFixedSize(32, 32)
         self.button_add.setToolTip('Add selected transforms')
-        self.button_refresh = QtGui.QPushButton(get_icon('refresh'), '')
-        self.button_refresh.setFixedSize(32, 32)
-        self.button_refresh.setToolTip('Refresh')
         self.button_red = QtGui.QPushButton()
         self.button_red.setFixedSize(32, 32)
         self.button_red.setObjectName('red')

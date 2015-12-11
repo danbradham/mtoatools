@@ -4,7 +4,16 @@
    contain the root `toctree` directive.
 
 mtoatools
-===============================
+=========
+
+A set of tools for Arnold in Autodesk Maya.
+
+
+Features
+========
+
+* python api
+* AOV matte management ui
 
 
 Table of Contents
