@@ -17,19 +17,28 @@ class Defaults(object):
     @property
     def driver(self):
         if not self._driver:
-            self._driver = pmc.PyNode('defaultArnoldDriver')
+            try:
+                self._driver = pmc.PyNode('defaultArnoldDriver')
+            except TypeError:
+                raise Exception('Arnod is not the current renderer')
         return self._driver
 
     @property
     def filter(self):
         if not self._driver:
-            self._driver = pmc.PyNode('defaultArnoldFilter')
+            try:
+                self._driver = pmc.PyNode('defaultArnoldFilter')
+            except TypeError:
+                raise Exception('Arnod is not the current renderer')
         return self._driver
 
     @property
     def options(self):
         if not self._driver:
-            self._driver = pmc.PyNode('defaultArnoldRenderOptions')
+            try:
+                self._driver = pmc.PyNode('defaultArnoldRenderOptions')
+            except TypeError:
+                raise Exception('Arnod is not the current renderer')
         return self._driver
 
 Defaults = Defaults()

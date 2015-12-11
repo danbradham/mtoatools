@@ -1,13 +1,39 @@
 import os
 from functools import partial
 from collections import defaultdict
+from contextlib import contextmanager
 from PySide import QtGui, QtCore
 import pymel.core as pmc
 from maya import OpenMaya
-from contextlib import contextmanager
 from .dialogs import MatteDialog, MatteWidget, ObjectWidget, ObjectItem
 from .utils import get_maya_window
 from ..api import MatteAOV
+
+
+_MAYA_MADE_SELECTION_ = False
+_UI_MADE_SELECTION_ = False
+
+
+@contextmanager
+def maya_made_selection():
+    global _MAYA_MADE_SELECTION_
+    _MAYA_MADE_SELECTION_ = True
+
+    try:
+        yield
+    finally:
+        _MAYA_MADE_SELECTION_ = False
+
+
+@contextmanager
+def ui_made_selection():
+    global _UI_MADE_SELECTION_
+    _UI_MADE_SELECTION_ = True
+
+    try:
+        yield
+    finally:
+        _UI_MADE_SELECTION_ = False
 
 
 class MayaHooks(QtCore.QObject):
@@ -63,7 +89,7 @@ class MayaHooks(QtCore.QObject):
                     OpenMaya.MMessage.removeCallback(callback_id)
             callback()
 
-        callback_id = OpenMaya.MNodeMessage.addNodeDestroyedCallback(
+        callback_id = OpenMaya.MNodeMessage.addNodeAboutToDeleteCallback(
             mobject,
             maya_callback,
         )
@@ -81,10 +107,10 @@ class MatteController(MatteDialog):
     def __init__(self, parent=get_maya_window()):
         super(MatteController, self).__init__(parent=parent)
 
-        self.matte_list.currentItemChanged.connect(self.matte_list_select)
-        self.obj_list.currentItemChanged.connect(self.obj_list_select)
+        self.matte_list.itemSelectionChanged.connect(self.matte_list_select)
+        self.obj_list.itemSelectionChanged.connect(self.obj_list_select)
         self.button_new.clicked.connect(self.new_clicked)
-        self.header.button_refresh.clicked.connect(self.refresh_matte_list)
+        self.button_refresh.clicked.connect(self.refresh_matte_list)
         self.button_add.clicked.connect(self.add_clicked)
         self.button_red.clicked.connect(self.color_clicked(1, 0, 0))
         self.button_green.clicked.connect(self.color_clicked(0, 1, 0))
@@ -106,11 +132,16 @@ class MatteController(MatteDialog):
         if count == 0:
             return
 
-        selection = pmc.ls(sl=True)
-        for i in xrange(count):
-            item = self.obj_list.item(i)
-            if item.pynode.getParent() in selection:
-                item.setSelected(True)
+        with maya_made_selection():
+            selection = pmc.ls(sl=True)
+            for i in xrange(count):
+                item = self.obj_list.item(i)
+                if (item.pynode in selection
+                    or item.pynode.getParent() in selection
+                ):
+                    item.setSelected(True)
+                else:
+                    item.setSelected(False)
 
     def selected_nodes(self):
         pre_select = self.obj_list.selectedItems()
@@ -120,22 +151,6 @@ class MatteController(MatteDialog):
             nodes = []
 
         return nodes
-
-    def select_nodes(self, nodes):
-        for i in xrange(self.obj_list.count()):
-            item = self.obj_list.item(i)
-            if item.pynode in nodes:
-                item.setSelected(True)
-
-    @contextmanager
-    def maintain_obj_list(self):
-        old_nodes = self.selected_nodes()
-        try:
-            yield
-        except:
-            raise
-        finally:
-            self.select_nodes(old_nodes)
 
     def color_clicked(self, *color):
         def on_click():
@@ -244,11 +259,17 @@ class MatteController(MatteDialog):
         self.set_aov(item.pynode)
 
     def obj_list_select(self):
-        nodes = []
+
+        if _MAYA_MADE_SELECTION_:
+            return
+
         items = self.obj_list.selectedItems()
         if not items:
             return
 
+        nodes = []
         for item in items:
             nodes.append(item.pynode)
-        pmc.select(nodes, replace=True)
+
+        with ui_made_selection():
+            pmc.select(nodes, replace=True)
