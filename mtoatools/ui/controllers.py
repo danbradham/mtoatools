@@ -5,7 +5,7 @@ from PySide import QtGui, QtCore
 import pymel.core as pmc
 from maya import OpenMaya
 from contextlib import contextmanager
-from .dialogs import MatteDialog, MatteWidget, ObjectWidget
+from .dialogs import MatteDialog, MatteWidget, ObjectWidget, ObjectItem
 from .utils import get_maya_window
 from ..api import MatteAOV
 
@@ -16,10 +16,9 @@ class MayaHooks(QtCore.QObject):
     scene_selection_changed = QtCore.Signal()
 
     def __init__(self, parent=None):
-        self.parent = parent
         super(MayaHooks, self).__init__(parent=parent)
+
         self.callback_ids = defaultdict(list)
-        self.scriptJobs = defaultdict(list)
         OpenMaya.MSceneMessage.addCallback(
             OpenMaya.MSceneMessage.kAfterOpen,
             self.emit_scene_changed
@@ -39,40 +38,42 @@ class MayaHooks(QtCore.QObject):
     def emit_scene_selection_changed(self, *args):
         self.scene_selection_changed.emit()
 
-    def add_item_callbacks(self, node, attr, item, del_callback=None):
+    def add_attribute_changed_callback(self, node, attr, callback):
+        mobject=node.__apimobject__()
+        mplug = node.attr(attr).__apimplug__()
 
-        def attr_changed(*args):
-            with self.parent.maintain_obj_list():
-                self.parent.refresh_obj_list()
+        def maya_callback(msg, plug, other_plug, data):
+            if plug == mplug:
+                if msg & OpenMaya.MNodeMessage.kAttributeSet:
+                    callback()
 
-        changed_id = pmc.scriptJob(
-            attributeChange=[str(node) + '.' + attr, attr_changed],
-            kws=True,
+        callback_id = OpenMaya.MNodeMessage.addAttributeChangedCallback(
+            mobject,
+            maya_callback,
         )
+        self.callback_ids[node].append(callback_id)
 
-        def cleanup(*args):
-            callback_ids = self.callback_ids.get(pop, None)
+    def add_about_to_delete_callback(self, node, callback):
+        mobject=node.__apimobject__()
+
+        def maya_callback(depend_node, dg_modifier, data):
+            callback_ids = self.callback_ids.pop(node, None)
             if callback_ids:
-                OpenMaya.MMessage.removeCallbacks(callback_ids)
-            if del_callback:
-                del_callback()
+                for callback_id in callback_ids:
+                    OpenMaya.MMessage.removeCallback(callback_id)
+            callback()
 
-        destroyed_id = OpenMaya.MNodeMessage.addNodeDestroyedCallback(
-            node.__apimobject__(),
-            cleanup,
+        callback_id = OpenMaya.MNodeMessage.addNodeDestroyedCallback(
+            mobject,
+            maya_callback,
         )
-        self.callback_ids[node].append(destroyed_id)
+        self.callback_ids[node].append(callback_id)
 
-    def clear_item_callbacks(self):
+    def clear_callbacks(self):
         for node, callback_ids in self.callback_ids.items():
             for callback_id in callback_ids:
                 OpenMaya.MMessage.removeCallback(callback_id)
         self.callback_ids = defaultdict(list)
-
-        for node, scriptjob_ids in self.scriptJobs.items():
-            for scriptjob_id in scriptjob_ids:
-                pmc.scriptJob(kill=scriptjob_id, force=True)
-        self.scriptJobs = defaultdict(list)
 
 
 class MatteController(MatteDialog):
@@ -142,10 +143,11 @@ class MatteController(MatteDialog):
             if not items:
                 return
 
-            with self.maintain_obj_list():
-                nodes = [item.pynode for item in items]
-                self.aov.set_objects_color(color, *nodes)
-                self.refresh_obj_list()
+            nodes = [item.pynode for item in items]
+            self.aov.set_objects_color(color, *nodes)
+            for item in items:
+                item.refresh_color()
+            self.obj_list.sortItems()
 
         return on_click
 
@@ -153,9 +155,13 @@ class MatteController(MatteDialog):
         if not self.aov:
             return
 
-        self.aov.set_objects_color((1,1,1), *pmc.ls(sl=True, transforms=True))
-        with self.maintain_obj_list():
-            self.refresh_obj_list()
+        nodes = pmc.ls(sl=True, transforms=True)
+        color = (1, 1, 1)
+        added_nodes = self.aov.add(*nodes)
+        for node in added_nodes:
+            node.attr(self.aov.mesh_attr_name).set(*color)
+            self.new_obj_item(node, color)
+        self.obj_list.sortItems()
 
     def new_clicked(self):
         name = self.matte_line.text()
@@ -185,28 +191,37 @@ class MatteController(MatteDialog):
             self.aov = None
             self.obj_list.clear()
 
-    def delete_obj_item(self, item, node):
+    def refresh_item_color(self, item):
+        item.refresh_color()
+        self.obj_list.sortItems()
+
+    def delete_obj_item(self, item):
         self.obj_list.takeItem(self.obj_list.indexFromItem(item).row())
-        self.aov.discard(node)
+        self.aov.discard(item.pynode)
 
     def new_obj_item(self, node, color):
-        item = QtGui.QListWidgetItem()
-        item.pynode = node
 
-        del_callback = partial(self.delete_obj_item, item, node)
         widget = ObjectWidget(str(node))
-        widget.del_button.clicked.connect(del_callback)
         widget.set_color(*color)
 
+        item = ObjectItem(self.aov, node, widget)
         item.setSizeHint(widget.sizeHint())
+
         self.obj_list.addItem(item)
         self.obj_list.setItemWidget(item, widget)
-        self.maya_hooks.add_item_callbacks(
+
+        # Add attr changed callbacks
+        attr_callback = partial(self.refresh_item_color, item)
+        self.maya_hooks.add_attribute_changed_callback(
             node,
             self.aov.mesh_attr_name,
-            item,
-            del_callback
+            attr_callback
         )
+
+        # Add delete callbacks
+        del_callback = partial(self.delete_obj_item, item)
+        widget.del_button.clicked.connect(del_callback)
+        self.maya_hooks.add_about_to_delete_callback(node, del_callback)
 
     def refresh_matte_list(self):
         self.obj_list.clear()
@@ -216,7 +231,7 @@ class MatteController(MatteDialog):
             self.new_matte_item(aov)
 
     def refresh_obj_list(self):
-        self.maya_hooks.clear_item_callbacks()
+        self.maya_hooks.clear_callbacks()
         self.obj_list.clear()
         for color, nodes in self.aov:
             for node in nodes:
@@ -227,7 +242,6 @@ class MatteController(MatteDialog):
         if not item:
             return
         self.set_aov(item.pynode)
-        self.refresh_obj_list()
 
     def obj_list_select(self):
         nodes = []

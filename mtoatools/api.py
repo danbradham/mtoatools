@@ -56,8 +56,7 @@ class MatteAOV(object):
 
     @classmethod
     def create(cls, name):
-        if pmc.objExists('aiAOV_' + name):
-            name = get_next_name(name)
+        name = cls.get_unused_name(name)
 
         selected = pmc.selected(type='transform')
 
@@ -74,9 +73,20 @@ class MatteAOV(object):
 
         return aov
 
+    @staticmethod
+    def get_unused_name(name):
+        if pmc.objExists('aiAOV_' + name):
+            name = get_next_name(name)
+        return name
+
     @property
     def name(self):
         return self.aov.attr('name').get()
+
+    # @name.setter
+    # def name(self, new_name):
+    #     new_name = self.get_unused_name(new_name)
+    #     self.aov.attr('name').set()
 
     @property
     def color_attr_name(self):
@@ -92,7 +102,7 @@ class MatteAOV(object):
             color = tuple(node.attr(self.mesh_attr_name).get())
             objects[color].append(node)
 
-        return sorted(objects.items(), key=itemgetter(0))
+        return sorted(objects.items(), key=itemgetter(0), reverse=True)
 
     def get_objects(self):
         ls = set(pmc.ls('*.' + self.mesh_attr_name, r=True, objectsOnly=True))
@@ -103,19 +113,25 @@ class MatteAOV(object):
             yield color, nodes
 
     def add(self, *nodes):
+        added_nodes = []
         for node in nodes:
             if node.type() == 'transform':
                 node = node.getShape()
             if not hasattr(node, self.mesh_attr_name):
                 add_vector_attr(node, self.mesh_attr_name)
+                added_nodes.append(node)
+        return added_nodes
 
     def discard(self, *nodes):
+        removed_nodes = []
         for node in nodes:
             if (node.type() == 'transform'
                 and not hasattr(node, self.mesh_attr_name)):
                 node = node.getShape()
             if hasattr(node, self.mesh_attr_name):
                 node.attr(self.mesh_attr_name).delete()
+                removed_nodes.append(node)
+        return removed_nodes
 
     def set_default_color(self, rgb):
         self.user_data.defaultValue.set(*rgb)
@@ -126,6 +142,8 @@ class MatteAOV(object):
 
     def set_objects_color(self, rgb, *nodes):
         for node in nodes:
+            if node.type() == 'transform':
+                node = node.getShape()
             if not hasattr(node, self.mesh_attr_name):
                 self.add(node)
             node.attr(self.mesh_attr_name).set(*rgb)

@@ -31,6 +31,24 @@ def get_icon(name, cache={}):
     return icon
 
 
+class ObjectItem(QtGui.QListWidgetItem):
+
+    def __init__(self, aov, pynode, widget, *args, **kwargs):
+        super(ObjectItem, self).__init__(*args, **kwargs)
+        self.pynode = pynode
+        self.widget = widget
+        self.aov = aov
+
+    def __lt__(self, other):
+        return self.color() < other.color()
+
+    def color(self):
+        return self.pynode.attr(self.aov.mesh_attr_name).get()
+
+    def refresh_color(self):
+        self.widget.set_color(*self.color())
+
+
 class ObjectWidget(QtGui.QWidget):
 
     def __init__(self, text, *args, **kwargs):
@@ -82,6 +100,7 @@ class MatteList(QtGui.QListWidget):
     def __init__(self, *args, **kwargs):
         super(MatteList, self).__init__(*args, **kwargs)
         self.setObjectName('mattelist')
+        self.setSortingEnabled(True)
 
 
 class ObjectList(QtGui.QListWidget):
@@ -90,6 +109,7 @@ class ObjectList(QtGui.QListWidget):
         super(ObjectList, self).__init__(*args, **kwargs)
         self.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
         self.setObjectName('objectlist')
+        self.setSortingEnabled(True)
 
 
 class Header(QtGui.QWidget):
