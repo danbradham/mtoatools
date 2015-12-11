@@ -1,0 +1,76 @@
+QLabel{
+    font-size: 10px;
+}
+QLineEdit{
+    font-size: 16px;
+    height: 28px;
+}
+QPushButton{
+    background-color: rgb(93, 93, 93);
+}
+QPushButton:hover{
+    background-color: rgb(109, 109, 109);
+}
+QPushButton#red{
+    background-color: rgb(225, 50, 50);
+    border: 0;
+}
+QPushButton#green{
+    background-color: rgb(50, 225, 50);
+    border: 0;
+}
+QPushButton#blue{
+    background-color: rgb(50, 50, 225);
+    border: 0;
+}
+QPushButton#white{
+    background-color: rgb(225, 225, 225);
+    border: 0;
+}
+QPushButton#black{
+    background-color: black;
+    border: 0;
+}
+QPushButton#red:hover{
+    background-color: rgb(255, 50, 50);
+}
+QPushButton#green:hover{
+    background-color: rgb(50, 255, 50);
+}
+QPushButton#blue:hover{
+    background-color: rgb(50, 50, 255);
+}
+QPushButton#white:hover{
+    background-color: rgb(255, 255, 255);
+}
+QPushButton#black:hover{
+    background-color: rgb(50, 50, 50);
+}
+QPushButton#delete{
+    background-color: rgb(43, 43, 43);
+    border: 0;
+}
+QPushButton#delete:hover{
+    background-color: rgb(55, 55, 55);
+}
+QWidget#header{
+    font-size: 24px;
+    color: rgb(235, 235, 235);
+    background-color: rgb(43, 43, 43);
+}
+QLabel#header_label{
+    font-size: 24px;
+    color: rgb(235, 235, 235);
+    background-color: rgb(43, 43, 43);
+}
+QPushButton#refresh{
+    background-color: rgb(43, 43, 43);
+    border: 0;
+}
+QPushButton#refresh:hover{
+    background-color: rgb(55, 55, 55);
+}
+QLabel#title{
+    font-size: 20px;
+    color: rgb(187, 187, 187);
+}

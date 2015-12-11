@@ -69,13 +69,10 @@ class MatteAOV(object):
         user_data.colorAttrName.set(aov_name)
         user_data.outColor.connect(aov.defaultValue)
 
-        attr_name = 'mtoa_constant_' + aov_name
-        for node in selected:
-            shape = node.getShape()
-            add_vector_attr(shape, attr_name)
-            shape.attr(attr_name).set(1, 1, 1)
+        aov = cls(aov, user_data)
+        aov.set_objects_color((1, 1, 1), *selected)
 
-        return cls(aov, user_data)
+        return aov
 
     @property
     def name(self):
@@ -98,7 +95,8 @@ class MatteAOV(object):
         return sorted(objects.items(), key=itemgetter(0))
 
     def get_objects(self):
-        return pmc.ls('*.' + self.mesh_attr_name, r=True, objectsOnly=True)
+        ls = set(pmc.ls('*.' + self.mesh_attr_name, r=True, objectsOnly=True))
+        return list(ls)
 
     def __iter__(self):
         for color, nodes in self.get_sorted_objects():
@@ -129,11 +127,11 @@ class MatteAOV(object):
     def set_objects_color(self, rgb, *nodes):
         for node in nodes:
             if not hasattr(node, self.mesh_attr_name):
-                add_vector_attr(node, self.mesh_attr_name)
+                self.add(node)
             node.attr(self.mesh_attr_name).set(*rgb)
 
     def delete(self):
-        self.rem_objects(*self.get_objects())
+        self.discard(*self.get_objects())
         pmc.delete(self.aov)
         pmc.delete(self.user_data)
 
@@ -141,7 +139,7 @@ class MatteAOV(object):
     def ls(cls):
         aovs = []
         for node in pmc.ls('*.is_aov_matte', r=True, objectsOnly=True):
-            aov.append(cls(node, node.defaultValue.inputs()[0]))
+            aovs.append(cls(node, node.defaultValue.inputs()[0]))
         return aovs
 
 

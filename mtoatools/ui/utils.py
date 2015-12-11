@@ -4,7 +4,6 @@ import shiboken
 import time
 
 
-
 def get_maya_window():
     '''Get Maya MainWindow as a QWidget.'''
 
@@ -21,3 +20,4 @@ def wait(delay=1):
         if time.clock() - s >= delay:
             return
         QtGui.qApp.processEvents()
+
