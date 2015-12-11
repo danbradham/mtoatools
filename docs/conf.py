@@ -31,6 +31,10 @@ project_root = os.path.dirname(cwd)
 # version is used.
 sys.path.insert(0, project_root)
 
+import mock
+mock = Mock()
+modules = {'pymel': mock, 'maya': mock, 'PySide': mock}
+
 import mtoatools
 
 # -- General configuration ---------------------------------------------
