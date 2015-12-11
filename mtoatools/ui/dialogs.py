@@ -31,6 +31,45 @@ def get_icon(name, cache={}):
     return icon
 
 
+class IconButton(QtGui.QLabel):
+
+    clicked = QtCore.Signal()
+
+    def __init__(self, icon, icon_hover, *args, **kwargs):
+        super(IconButton, self).__init__(*args, **kwargs)
+
+        self.normal = QtGui.QPixmap(QtGui.QImage(icon))
+        self.hover = QtGui.QPixmap(QtGui.QImage(icon_hover))
+        self.hovering = False
+        self.setPixmap(self.normal)
+
+    def mousePressEvent(self, event):
+
+        self.setPixmap(self.normal)
+        super(IconButton, self).mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        if self.hovering:
+            self.setPixmap(self.hover)
+        else:
+            self.setPixmap(self.normal)
+        super(IconButton, self).mouseReleaseEvent(event)
+        if self.hovering:
+            self.clicked.emit()
+
+    def enterEvent(self, event):
+
+        self.setPixmap(self.hover)
+        self.hovering = True
+        super(IconButton, self).enterEvent(event)
+
+    def leaveEvent(self, event):
+
+        self.setPixmap(self.normal)
+        self.hovering = False
+        super(IconButton, self).leaveEvent(event)
+
+
 class ObjectItem(QtGui.QListWidgetItem):
 
     def __init__(self, aov, pynode, widget, *args, **kwargs):
@@ -57,13 +96,21 @@ class ObjectWidget(QtGui.QWidget):
         self.layout = QtGui.QHBoxLayout()
         self.setLayout(self.layout)
 
+        if '|' in text:
+            text = text.split('|')[-1]
+        if len(text) > 20:
+            text = text[:20] + '...'
+
         self.label = QtGui.QLabel(text)
         self.label.setSizePolicy(
             QtGui.QSizePolicy.Expanding,
             QtGui.QSizePolicy.Minimum
         )
-        self.del_button = QtGui.QPushButton(get_icon('delete'), '')
-        self.del_button.setObjectName('delete')
+
+        self.del_button = IconButton(
+            icon=ui_path('icons', 'delete.png'),
+            icon_hover=ui_path('icons', 'delete_pressed.png'),
+        )
 
         self.layout.addWidget(self.label)
         self.layout.addWidget(self.del_button)
@@ -81,6 +128,11 @@ class MatteWidget(QtGui.QWidget):
         self.layout = QtGui.QHBoxLayout()
         self.setLayout(self.layout)
 
+        if '|' in text:
+            text = text.split('|')[-1]
+        if len(text) > 20:
+            text = text[:20] + '...'
+
         self.label = QtGui.QLabel(text)
         self.label.setSizePolicy(
             QtGui.QSizePolicy.Expanding,
@@ -88,8 +140,11 @@ class MatteWidget(QtGui.QWidget):
         )
         style = 'QLabel{font-size: 12px;}'
         self.label.setStyleSheet(style)
-        self.del_button = QtGui.QPushButton(get_icon('delete'), '')
-        self.del_button.setObjectName('delete')
+
+        self.del_button = IconButton(
+            icon=ui_path('icons', 'delete.png'),
+            icon_hover=ui_path('icons', 'delete_pressed.png'),
+        )
 
         self.layout.addWidget(self.label)
         self.layout.addWidget(self.del_button)
@@ -208,14 +263,3 @@ class MatteDialog(QtGui.QDialog):
         self.layout.addLayout(self.grid, 1, 0)
         self.setLayout(self.layout)
         self.setStyleSheet(get_style())
-
-
-def test_main():
-
-    import sys
-    app = QtGui.QApplication(sys.argv)
-    dialog = MatteDialog()
-    sys.exit(dialog.exec_())
-
-if __name__ == '__main__':
-    test_main()

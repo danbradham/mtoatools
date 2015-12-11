@@ -3,8 +3,12 @@ import sys
 
 
 def main():
-    print '\n\nRunning Test Suite...\n\n'
-    os.system('nosetests -v --with-coverage --cover-package=mtoatools')
+    args = sys.argv[1:]
+
+    if not args or args[0] == '-ui':
+
+        from tests import test_dialogs
+        test_dialogs.test_matte_ui()
 
 
 if __name__ == '__main__':

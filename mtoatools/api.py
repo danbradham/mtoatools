@@ -92,11 +92,6 @@ class MatteAOV(object):
     def name(self):
         return self.aov.attr('name').get()
 
-    # @name.setter
-    # def name(self, new_name):
-    #     new_name = self.get_unused_name(new_name)
-    #     self.aov.attr('name').set()
-
     @property
     def color_attr_name(self):
         return self.user_data.colorAttrName.get()
