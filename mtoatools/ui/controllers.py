@@ -126,7 +126,7 @@ class MatteController(MatteDialog):
             if item.pynode in nodes:
                 item.setSelected(True)
 
-    @contextlib.contextmanager
+    @contextmanager
     def maintain_obj_list(self):
         old_nodes = self.selected_nodes()
         try:
