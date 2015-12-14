@@ -6,6 +6,13 @@ from setuptools import setup, find_packages
 import os
 import sys
 
+if sys.argv[-1] == 'cheeseit!':
+    os.system('python setup.py sdist bdist_wheel upload')
+    sys.exit()
+elif sys.argv[-1] == 'testit!':
+    os.system('python setup.py sdist bdist_wheel upload -r pypitest')
+    sys.exit()
+
 
 def get_info(pyfile):
     '''Retrieve dunder values from a pyfile'''
@@ -22,14 +29,6 @@ def get_info(pyfile):
 
 info = get_info('mtoatools/__init__.py')
 
-
-if sys.argv[-1] == 'cheeseit!':
-    os.system('python setup.py sdist upload')
-    sys.exit()
-
-elif sys.argv[-1] == 'testit!':
-    os.system('python setup.py sdist upload -r pypitest')
-    sys.exit()
 
 with open("README.rst") as f:
     readme = f.read()
