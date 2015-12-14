@@ -49,13 +49,12 @@ class IconButton(QtGui.QLabel):
         super(IconButton, self).mousePressEvent(event)
 
     def mouseReleaseEvent(self, event):
-        if self.hovering:
-            self.setPixmap(self.hover)
-        else:
-            self.setPixmap(self.normal)
         super(IconButton, self).mouseReleaseEvent(event)
         if self.hovering:
+            self.setPixmap(self.hover)
             self.clicked.emit()
+        else:
+            self.setPixmap(self.normal)
 
     def enterEvent(self, event):
 
