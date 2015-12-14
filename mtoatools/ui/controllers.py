@@ -111,6 +111,7 @@ class MatteController(MatteDialog):
         self.obj_list.itemSelectionChanged.connect(self.obj_list_select)
         self.button_new.clicked.connect(self.new_clicked)
         self.button_refresh.clicked.connect(self.refresh_matte_list)
+        self.button_help.clicked.connect(self.show_help)
         self.button_add.clicked.connect(self.add_clicked)
         self.button_red.clicked.connect(self.color_clicked(1, 0, 0))
         self.button_green.clicked.connect(self.color_clicked(0, 1, 0))
@@ -274,3 +275,7 @@ class MatteController(MatteDialog):
 
         with ui_made_selection():
             pmc.select(nodes, replace=True)
+
+    def show_help(self):
+        import webbrowser
+        webbrowser.open('https://mtoatools.readthedocs.org')

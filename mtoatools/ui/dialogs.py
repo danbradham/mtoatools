@@ -49,12 +49,13 @@ class IconButton(QtGui.QLabel):
         super(IconButton, self).mousePressEvent(event)
 
     def mouseReleaseEvent(self, event):
-        super(IconButton, self).mouseReleaseEvent(event)
         if self.hovering:
             self.setPixmap(self.hover)
-            self.clicked.emit()
         else:
             self.setPixmap(self.normal)
+        super(IconButton, self).mouseReleaseEvent(event)
+        if self.hovering:
+            self.clicked.emit()
 
     def enterEvent(self, event):
 
@@ -188,11 +189,17 @@ class Header(QtGui.QWidget):
         self.button_refresh = QtGui.QPushButton(get_icon('refresh'), '')
         self.button_refresh.setFixedSize(32, 32)
         self.button_refresh.setToolTip('Refresh')
-        self.button_refresh.setObjectName('refresh')
+        self.button_refresh.setObjectName('headerbutton')
+
+        self.button_help = QtGui.QPushButton(get_icon('help'), '')
+        self.button_help.setFixedSize(32, 32)
+        self.button_help.setToolTip('Help')
+        self.button_help.setObjectName('headerbutton')
 
         self.layout.addWidget(self.icon)
         self.layout.addWidget(self.label)
         self.layout.addWidget(self.button_refresh)
+        self.layout.addWidget(self.button_help)
 
 
 class MatteDialog(QtGui.QDialog):
@@ -202,6 +209,7 @@ class MatteDialog(QtGui.QDialog):
 
         self.header = Header('mtoatools.mattes')
         self.button_refresh = self.header.button_refresh
+        self.button_help = self.header.button_help
 
         self.grid = QtGui.QGridLayout()
         self.grid.setContentsMargins(20, 20, 20, 20)

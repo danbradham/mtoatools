@@ -63,11 +63,11 @@ QLabel#header_label{
     color: rgb(235, 235, 235);
     background-color: rgb(43, 43, 43);
 }
-QPushButton#refresh{
+QPushButton#headerbutton{
     background-color: rgb(43, 43, 43);
     border: 0;
 }
-QPushButton#refresh:hover{
+QPushButton#headerbutton:hover{
     background-color: rgb(55, 55, 55);
 }
 QLabel#title{
