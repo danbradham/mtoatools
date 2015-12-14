@@ -22,6 +22,7 @@ version = mtoatools.__version__
 release = mtoatools.__version__
 exclude_patterns = ['_build']
 pygments_style = 'sphinx'
+html_static_path = ['_static']
 
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 

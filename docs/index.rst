@@ -1,19 +1,18 @@
-..  documentation master file, created by
-   sphinx-quickstart on Tue Jul  9 22:26:36 2013.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
+=========
 mtoatools
 =========
 
-A set of tools for Arnold in Autodesk Maya.
+.. image:: https://img.shields.io/pypi/v/mtoatools.svg
+        :target: https://pypi.python.org/pypi/mtoatools
+
+MtoAtools is a set of production tools for use with Arnold for Maya. This package will grow over time.
 
 
-Features
-========
+mtoatools.mattes
+================
+UI for managing Matte AOVs.
 
-* python api
-* AOV matte management ui
+|mattesui|
 
 
 Table of Contents
@@ -23,7 +22,7 @@ Table of Contents
    :maxdepth: 2
 
    installation
-   usage
+   mattes
    history
 
 Indices and tables
@@ -33,3 +32,5 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
+
+.. |mattesui| image:: images/mtoatools_mattes_ui.png
