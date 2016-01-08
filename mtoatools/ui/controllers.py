@@ -37,7 +37,9 @@ def ui_made_selection():
 
 
 class MayaHooks(QtCore.QObject):
+    '''Manage all Maya Message Callbacks (Hooks)'''
 
+    before_scene_changed = QtCore.Signal()
     scene_changed = QtCore.Signal()
     scene_selection_changed = QtCore.Signal()
 
@@ -45,18 +47,36 @@ class MayaHooks(QtCore.QObject):
         super(MayaHooks, self).__init__(parent=parent)
 
         self.callback_ids = defaultdict(list)
-        OpenMaya.MSceneMessage.addCallback(
+        change_messages = [
             OpenMaya.MSceneMessage.kAfterOpen,
-            self.emit_scene_changed
-        )
-        OpenMaya.MSceneMessage.addCallback(
             OpenMaya.MSceneMessage.kAfterNew,
-            self.emit_scene_changed
-        )
+            OpenMaya.MSceneMessage.kAfterImport,
+            OpenMaya.MSceneMessage.kAfterRemoveReference,
+            OpenMaya.MSceneMessage.kAfterCreateReference,
+        ]
+        for msg in change_messages:
+            OpenMaya.MSceneMessage.addCallback(
+                msg,
+                self.emit_scene_changed
+            )
+        before_change_messages = [
+            OpenMaya.MSceneMessage.kBeforeOpen,
+            OpenMaya.MSceneMessage.kBeforeNew,
+            OpenMaya.MSceneMessage.kBeforeRemoveReference,
+        ]
+        for msg in before_change_messages:
+            OpenMaya.MSceneMessage.addCallback(
+                msg,
+                self.emit_before_scene_changed
+            )
+
         OpenMaya.MEventMessage.addEventCallback(
             'SelectionChanged',
             self.emit_scene_selection_changed
         )
+
+    def emit_before_scene_changed(self, *args):
+        self.before_scene_changed.emit()
 
     def emit_scene_changed(self, *args):
         self.scene_changed.emit()
@@ -65,7 +85,7 @@ class MayaHooks(QtCore.QObject):
         self.scene_selection_changed.emit()
 
     def add_attribute_changed_callback(self, node, attr, callback):
-        mobject=node.__apimobject__()
+        mobject = node.__apimobject__()
         mplug = node.attr(attr).__apimplug__()
 
         def maya_callback(msg, plug, other_plug, data):
@@ -80,7 +100,7 @@ class MayaHooks(QtCore.QObject):
         self.callback_ids[node].append(callback_id)
 
     def add_about_to_delete_callback(self, node, callback):
-        mobject=node.__apimobject__()
+        mobject = node.__apimobject__()
 
         def maya_callback(depend_node, dg_modifier, data):
             callback_ids = self.callback_ids.pop(node, None)
@@ -118,11 +138,13 @@ class MatteController(MatteDialog):
         self.button_blue.clicked.connect(self.color_clicked(0, 0, 1))
         self.button_white.clicked.connect(self.color_clicked(1, 1, 1))
         self.button_black.clicked.connect(self.color_clicked(0, 0, 0))
-        self.refresh_matte_list()
 
         self.maya_hooks = MayaHooks(parent=self)
+        self.maya_hooks.before_scene_changed.connect(self.clear_lists)
         self.maya_hooks.scene_changed.connect(self.refresh_matte_list)
         self.maya_hooks.scene_selection_changed.connect(self.scene_sel_changed)
+
+        self.refresh_matte_list()
 
     def set_aov(self, aov):
         self.aov = aov
@@ -239,7 +261,15 @@ class MatteController(MatteDialog):
         widget.del_button.clicked.connect(del_callback)
         self.maya_hooks.add_about_to_delete_callback(node, del_callback)
 
+    def clear_lists(self):
+        print 'CLEARING LISTS'
+        self.maya_hooks.clear_callbacks()
+        self.matte_list.clear()
+        self.obj_list.clear()
+
     def refresh_matte_list(self):
+        print 'REFRESHING MATTE LISTS'
+        self.maya_hooks.clear_callbacks()
         self.matte_list.clear()
         self.obj_list.clear()
 
@@ -250,9 +280,8 @@ class MatteController(MatteDialog):
         self.maya_hooks.clear_callbacks()
         self.obj_list.clear()
 
-        for color, nodes in self.aov:
-            for node in nodes:
-                self.new_obj_item(node, color)
+        for node, color in self.aov:
+            self.new_obj_item(node, color)
 
     def matte_list_select(self):
         item = self.matte_list.currentItem()

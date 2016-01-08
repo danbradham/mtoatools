@@ -28,7 +28,7 @@ QPushButton#white{
     border: 0;
 }
 QPushButton#black{
-    background-color: black;
+    background-color: rgb(15, 15, 15);
     border: 0;
 }
 QPushButton#red:hover{
@@ -44,7 +44,7 @@ QPushButton#white:hover{
     background-color: rgb(255, 255, 255);
 }
 QPushButton#black:hover{
-    background-color: rgb(50, 50, 50);
+    background-color: black;
 }
 QPushButton#delete{
     background-color: rgb(43, 43, 43);

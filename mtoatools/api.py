@@ -113,8 +113,8 @@ class MatteAOV(object):
         return list(ls)
 
     def __iter__(self):
-        for color, nodes in self.get_sorted_objects():
-            yield color, nodes
+        for node in self.get_objects():
+            yield node, node.attr(self.mesh_attr_name).get()
 
     def add(self, *nodes):
         added_nodes = []

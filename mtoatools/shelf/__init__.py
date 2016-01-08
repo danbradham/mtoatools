@@ -20,6 +20,34 @@ buttons = {
         'useAlpha': True,
         'flat': True,
         'enableBackground': False,
+    },
+    'patches': {
+        'command': (
+            'from mtoatools.menus import PatchesMenu\n'
+            'PatchesMenu.show()'
+        ),
+        'sourceType': 'python',
+        'style': 'iconOnly',
+        'image': shelf_path('mtoatools_patches.png'),
+        'annotation': 'AOV Matte management',
+        'enableCommandRepeat': False,
+        'useAlpha': True,
+        'flat': True,
+        'enableBackground': False,
+    }
+    'documentation': {
+        'command': (
+            "import webbrowser\n"
+            "webbrowser.open('https://mtoatools.readthedocs.org')"
+        ),
+        'sourceType': 'python',
+        'style': 'iconOnly',
+        'image': shelf_path('mtoatools_docs.png'),
+        'annotation': 'documentation',
+        'enableCommandRepeat': False,
+        'useAlpha': True,
+        'flat': True,
+        'enableBackground': False,
     }
 }
 
@@ -42,6 +70,5 @@ def create_shelf():
         kwargs['height'] = img.height()
 
         cmds.shelfButton(label=button, parent=shelf, **kwargs)
-
 
 create_shelf()

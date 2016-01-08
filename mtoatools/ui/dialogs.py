@@ -34,12 +34,18 @@ def get_icon(name, cache={}):
 class IconButton(QtGui.QLabel):
 
     clicked = QtCore.Signal()
+    cache = {}
 
     def __init__(self, icon, icon_hover, *args, **kwargs):
         super(IconButton, self).__init__(*args, **kwargs)
 
-        self.normal = QtGui.QPixmap(QtGui.QImage(icon))
-        self.hover = QtGui.QPixmap(QtGui.QImage(icon_hover))
+        if not icon in self.cache:
+            self.cache[icon] = QtGui.QPixmap(QtGui.QImage(icon))
+        if not icon_hover in self.cache:
+            self.cache[icon_hover] = QtGui.QPixmap(QtGui.QImage(icon_hover))
+
+        self.normal = self.cache[icon]
+        self.hover = self.cache[icon_hover]
         self.hovering = False
         self.setPixmap(self.normal)
 
@@ -90,6 +96,8 @@ class ObjectItem(QtGui.QListWidgetItem):
 
 class ObjectWidget(QtGui.QWidget):
 
+    color_cache = {}
+
     def __init__(self, text, *args, **kwargs):
         super(ObjectWidget, self).__init__(*args, **kwargs)
 
@@ -98,8 +106,8 @@ class ObjectWidget(QtGui.QWidget):
 
         if '|' in text:
             text = text.split('|')[-1]
-        if len(text) > 20:
-            text = text[:20] + '...'
+        if len(text) > 24:
+            text = text[:24] + '...'
 
         self.label = QtGui.QLabel(text)
         self.label.setSizePolicy(
@@ -116,8 +124,11 @@ class ObjectWidget(QtGui.QWidget):
         self.layout.addWidget(self.del_button)
 
     def set_color(self, *color):
-        style = 'QLabel{{color:rgb({},{},{});font-size: 12px;}}'
-        self.label.setStyleSheet(style.format(*[c * 255 for c in color]))
+        if not color in self.color_cache:
+            style = 'QLabel{{ color:rgb({},{},{}); font-size: 14px;}}'
+            self.color_cache[color] = style.format(*[c * 255 for c in color])
+
+        self.label.setStyleSheet(self.color_cache[color])
 
 
 class MatteWidget(QtGui.QWidget):
@@ -130,15 +141,15 @@ class MatteWidget(QtGui.QWidget):
 
         if '|' in text:
             text = text.split('|')[-1]
-        if len(text) > 20:
-            text = text[:20] + '...'
+        if len(text) > 24:
+            text = text[:24] + '...'
 
         self.label = QtGui.QLabel(text)
         self.label.setSizePolicy(
             QtGui.QSizePolicy.Expanding,
             QtGui.QSizePolicy.Minimum
         )
-        style = 'QLabel{font-size: 12px;}'
+        style = 'QLabel{font-size: 14px;}'
         self.label.setStyleSheet(style)
 
         self.del_button = IconButton(
