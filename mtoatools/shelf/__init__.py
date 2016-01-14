@@ -34,7 +34,7 @@ buttons = {
         'useAlpha': True,
         'flat': True,
         'enableBackground': False,
-    }
+    },
     'documentation': {
         'command': (
             "import webbrowser\n"
