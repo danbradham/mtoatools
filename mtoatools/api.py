@@ -161,7 +161,9 @@ class MatteAOV(object):
     def ls(cls):
         aovs = []
         for node in pmc.ls('*.is_aov_matte', r=True, objectsOnly=True):
-            aovs.append(cls(node, node.defaultValue.inputs()[0]))
+            inputs = node.defaultValue.inputs()
+            if inputs:
+                aovs.append(cls(node, inputs[0]))
         return aovs
 
 
