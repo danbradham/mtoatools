@@ -50,7 +50,7 @@ def get_bytes(plug, resolution):
     # swap red and blue channels and flip horizontally
     img = QtGui.QImage(tmp.name).rgbSwapped().mirrored(True, False)
 
-    try: # clean up
+    try:
         os.remove(tmp.name)
     except:
         pass
@@ -58,60 +58,15 @@ def get_bytes(plug, resolution):
     return str(img.bits())
 
 
-def topmost_plug(plug):
-
-    plugs = []
-    plugs.append(plug)
-
-    while True:
-        in_plugs = plugs[-1].connectedTo(True, False)
-        if not in_plugs:
-            return plugs[-1]
-        plugs.append(in_plugs[0])
-
-
-def create(light_shapes=None):
-    if not light_shapes:
-        light_shapes = cmds.ls(sl=True, dag=True, leaf=True, lights=True)
-
-    if isinstance(light_shapes, basestring):
-        light_shapes = [light_shapes]
-    elif not isinstance(light_shapes, Sequence):
-        return
-
-    locs = []
-    for shape in light_shapes:
-        loc = cmds.createNode('colorSwatch')
-        cmds.setAttr(loc + '.overrideEnabled', True)
-        cmds.setAttr(loc + '.overrideDisplayType', 2) # Reference display type
-
-        # Add and connect attributes
-        shape_xform = cmds.listRelatives(shape, parent=True)[0]
-        if not cmds.objExists(shape + '.viewportResolution'):
-            cmds.addAttr(shape, ln='viewportResolution', sn='vpres', hnv=True, hxv=True, min=32, max=1024, at='long')
-            cmds.addAttr(shape, ln='viewportPreview', sn='vpprev', at='bool', dv=1, k=True)
-        cmds.connectAttr(shape + '.message', loc + '.lightShape')
-        cmds.connectAttr(shape +'.viewportResolution', loc + '.resolution')
-        cmds.connectAttr(shape + '.viewportPreview', loc + '.visibility')
-
-        # Parent locator
-        loc_xform = cmds.listRelatives(loc, parent=True)[0]
-        cmds.parent(loc_xform, shape_xform, relative=True)
-        locs.append((loc_xform, loc))
-
-    return locs
-
-
-class ColorSwatch(omui.MPxLocatorNode):
-    '''A Locator with variable shape'''
+class Swatch(omui.MPxLocatorNode):
 
     id = om.MTypeId(0x00124dc1)
-    name = 'colorSwatch'
-    classification = 'drawdb/geometry/colorSwatch'
-    registrantId = 'colorSwatchRegistrantId'
+    name = 'Swatch'
+    classification = 'drawdb/geometry/Swatch'
+    registrantId = 'SwatchRegistrantId'
 
     def __init__(self):
-        super(ColorSwatch, self).__init__()
+        super(Swatch, self).__init__()
         self.texture = None
         self.texture_res = 32
         self.color = [0, 0, 0]
@@ -148,6 +103,7 @@ class ColorSwatch(omui.MPxLocatorNode):
         om.MPxNode.addAttribute(cls.inColor)
         om.MPxNode.addAttribute(cls.resolution)
         om.MPxNode.addAttribute(cls.sentinel)
+
         om.MPxNode.attributeAffects(cls.inColor, cls.sentinel)
         om.MPxNode.attributeAffects(cls.resolution, cls.sentinel)
 
@@ -173,6 +129,9 @@ class ColorSwatch(omui.MPxLocatorNode):
 
     def get_resolution(self):
         return om.MPlug(self.obj, self.resolution).asInt()
+
+    def get_always_redraw(self):
+        return om.MPlug(self.obj, self.always_redraw).asBool()
 
     def force_compute(self):
         return om.MPlug(self.obj, self.sentinel).asBool()
@@ -244,98 +203,39 @@ class ColorSwatch(omui.MPxLocatorNode):
         return om.MBoundingBox(om.MPoint(-1, -1, 0), om.MPoint(1, 1, 0))
 
 
-class ColorSwatchData(om.MUserData):
+class SwatchOverride(omr.MPxGeometryOverride):
 
-    def __init__(self):
-        super(ColorSwatchData, self).__init__(True)
+    def __init__(self, obj):
+        super(SwatchOverride, self).__init__(obj)
+        self.obj = obj
         self.resolution = None
         self.width = None
         self.height = None
         self.color = None
         self._texture = None
         self.is_file_texture = None
-        self.line = None
-
-    @property
-    def texture(self):
-        return self._texture
-
-    @texture.setter
-    def texture(self, tex):
-        if self._texture:
-            TEXTURE_MANAGER.releaseTexture(self._texture)
-        self._texture = tex
-
-    def __del__(self):
-        if self.texture:
-            TEXTURE_MANAGER.releaseTexture(self.texture)
-
-
-class ColorSwatchOverride(omr.MPxDrawOverride):
-
-    def __init__(self, obj):
-        super(ColorSwatchOverride, self).__init__(obj, self.draw)
-        self.obj = obj
 
     @classmethod
     def creator(cls, obj):
         return cls(obj)
 
-    def isBounded(self, *args):
-        return False
+    def get_texture(self):
+        return self._texture
 
-    def disableInternalBoundingBox(self, *args):
-        return True
+    def set_texture(self, tex):
+        if self._texture:
+            TEXTURE_MANAGER.releaseTexture(self._texture)
+        self._texture = tex
+
+    def __del__(self):
+        if self._texture:
+            TEXTURE_MANAGER.releaseTexture(self._texture)
 
     def get_color(self):
-        return om.MPlug(self.obj, ColorSwatch.inColor).asMDataHandle().asFloat3()
+        return om.MPlug(self.obj, Swatch.inColor).asMDataHandle().asFloat3()
 
     def get_resolution(self):
-        return om.MPlug(self.obj, ColorSwatch.resolution).asInt()
-
-    def force_compute(self):
-        return om.MPlug(self.obj, ColorSwatch.sentinel).asBool()
-
-    def prepareForDraw(self, dagpath, camera_path, frame_context, data):
-        '''Validate and update cache'''
-        if not isinstance(data, ColorSwatchData):
-            data = ColorSwatchData()
-
-        data.resolution = self.get_resolution()
-        data.width = data.resolution
-        data.height = data.resolution
-
-        plug = om.MPlug(self.obj, ColorSwatch.inColor)
-        in_plugs = plug.connectedTo(True, False)
-        if in_plugs:
-            in_in_plugs = in_plugs[0].connectedTo(True, False)
-            color_plug = in_in_plugs[0] if in_in_plugs else in_plugs[0]
-
-            if color_plug.attribute().apiTypeStr != 'kAttribute3Float':
-                data.color = om.MColor([1, 1, 1])
-                data.texture = None
-                data.is_file_texture = False
-
-            color_node = color_plug.node()
-            if color_node.apiTypeStr == 'kFileTexture':
-                depfn = om.MFnDependencyNode(color_node)
-                file = depfn.findPlug('fileTextureName', False).asString()
-                data.is_file_texture = True
-                data.texture = TEXTURE_MANAGER.acquireTexture(file)
-            else:
-                data.is_file_texture = False
-                data.texture = TEXTURE_MANAGER.acquireTexture(
-                    '',
-                    color_plug,
-                    data.width,
-                    data.height,
-                    False)
-        else:
-            data.texture = None
-            data.is_file_texture = False
-            data.color = om.MColor(self.get_color())
-
-        return data
+        return om.MPlug(self.obj, Swatch.resolution).asInt()
 
     def supportedDrawAPIs(self):
         return omr.MRenderer.kOpenGL | omr.MRenderer.kOpenGLCoreProfile | omr.MRenderer.kDirectX11
@@ -343,21 +243,60 @@ class ColorSwatchOverride(omr.MPxDrawOverride):
     def hasUIDrawables(self):
         return True
 
-    def addUIDrawables(self, dagpath, draw_manager, frame_context, data):
-        if not isinstance(data, ColorSwatchData):
-            return
+    def updateDG(self):
 
-        draw_manager.beginDrawable()
+        self.resolution = self.get_resolution()
+        self.width = self.resolution
+        self.height = self.resolution
 
-        if data.texture:
-            print 'dat data'
-            draw_manager.setTexture(data.texture)
+        plug = om.MPlug(self.obj, Swatch.inColor)
+        in_plugs = plug.connectedTo(True, False)
+        if in_plugs:
+            in_in_plugs = in_plugs[0].connectedTo(True, False)
+            color_plug = in_in_plugs[0] if in_in_plugs else in_plugs[0]
+
+            if color_plug.attribute().apiTypeStr != 'kAttribute3Float':
+                self.color = om.MColor([1, 1, 1])
+                self.set_texture(None)
+                self.is_file_texture = False
+
+            color_node = color_plug.node()
+            if color_node.apiTypeStr == 'kFileTexture':
+                depfn = om.MFnDependencyNode(color_node)
+                file = depfn.findPlug('fileTextureName', False).asString()
+                self.is_file_texture = True
+                self.set_texture(TEXTURE_MANAGER.acquireTexture(
+                    '',
+                    color_plug,
+                    self.width,
+                    self.height,
+                    False))
+            else:
+                self.is_file_texture = False
+                self.set_texture(TEXTURE_MANAGER.acquireTexture(
+                    '',
+                    color_plug,
+                    self.width,
+                    self.height,
+                    False)
+                )
         else:
-            draw_manager.setColor(data.color)
+            self.set_texture(None)
+            self.is_file_texture = False
+            self.color = om.MColor(self.get_color())
+
+    def addUIDrawables(self, dagpath, draw_manager, frame_context):
+        draw_manager.beginDrawable()
+        texture = self.get_texture()
+
+        if texture:
+            draw_manager.setTexture(texture)
+        else:
+            draw_manager.setColor(self.color)
         draw_manager.rect(
             om.MPoint(0, 0, 0),
-            om.MVector(0, 1, 0) if data.is_file_texture else om.MVector(0, -1, 0),
-            om.MVector(0, 0, -1) if data.is_file_texture else om.MVector(0, 0, 1),
+            om.MVector(0, -1, 0),
+            om.MVector(0, 0, 1),
             1,
             1,
             True,
@@ -365,13 +304,20 @@ class ColorSwatchOverride(omr.MPxDrawOverride):
 
         draw_manager.endDrawable()
 
-    @staticmethod
-    def draw(self, draw_context, *args):
-        '''
-        Drawing method unnecessary.
-        Used only for MPxDrawOverride Construction
-        '''
+    def isStreamDirty(self, *args):
+        return False
+
+    def isIndexingDirty(self, *args):
+        return False
+
+    def cleanUp(self):
         pass
+
+    def updateRenderItems(self, path, render_items):
+        return render_items
+
+    def populateGeometry(self, requirements, render_items, data):
+        return data
 
 
 def initializePlugin(obj):
@@ -379,22 +325,22 @@ def initializePlugin(obj):
 
     try:
         plugin.registerNode(
-            ColorSwatch.name,
-            ColorSwatch.id,
-            ColorSwatch.creator,
-            ColorSwatch.initialize,
+            Swatch.name,
+            Swatch.id,
+            Swatch.creator,
+            Swatch.initialize,
             om.MPxNode.kLocatorNode,
-            ColorSwatch.classification
+            Swatch.classification
         )
     except:
         sys.stderr.write("Failed to register node\n")
         raise
 
     try:
-        omr.MDrawRegistry.registerDrawOverrideCreator(
-            ColorSwatch.classification,
-            ColorSwatch.registrantId,
-            ColorSwatchOverride.creator
+        omr.MDrawRegistry.registerGeometryOverrideCreator(
+            Swatch.classification,
+            Swatch.registrantId,
+            SwatchOverride.creator
         )
     except:
         sys.stderr.write("Failed to register override\n")
@@ -404,15 +350,15 @@ def uninitializePlugin(obj):
     plugin = om.MFnPlugin(obj)
 
     try:
-        plugin.deregisterNode(ColorSwatch.id)
+        plugin.deregisterNode(Swatch.id)
     except:
         sys.stderr.write("Failed to deregister node\n")
         pass
 
     try:
-        omr.MDrawRegistry.deregisterDrawOverrideCreator(
-            ColorSwatch.classification,
-            ColorSwatch.registrantId,
+        omr.MDrawRegistry.deregisterGeometryOverrideCreator(
+            Swatch.classification,
+            Swatch.registrantId,
         )
     except:
         sys.stderr.write("Failed to deregister override\n")

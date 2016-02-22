@@ -11,3 +11,4 @@ __description__ = 'Arnold for Autodesk Maya tools'
 
 from . import plugins
 from .api import *
+from .models import *

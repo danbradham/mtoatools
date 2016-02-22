@@ -2,13 +2,21 @@ import os
 import sys
 
 
+def setup_path():
+    mtoatools_path = os.path.join(os.path.dirname(__file__), '../')
+    sys.path.insert(1, mtoatools_path)
+
+
 def main():
     args = sys.argv[1:]
 
-    if not args or args[0] == '-ui':
+    if args and args[0] == '-matte_ui':
+        setup_path()
+        from tests import show_dialogs
+        show_dialogs.matte_ui()
+        return
 
-        from tests import test_dialogs
-        test_dialogs.test_matte_ui()
+    os.system('mayapy -m unittest discover tests -v')
 
 
 if __name__ == '__main__':

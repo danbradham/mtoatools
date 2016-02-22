@@ -1,7 +1,14 @@
+'''
+mtoatools.plugins
+=================
+Arnold/Lighting related plugins for Autodesk Maya
+'''
+
 import os
 import sys
 from glob import glob
 from types import ModuleType
+from maya import cmds
 
 
 plugins_path = os.path.join(os.path.dirname(__file__), 'plugins')
@@ -35,3 +42,34 @@ for py_plugin_path in glob(os.path.join(plugins_path, '*.py')):
     mod_path = 'mtoatools.plugins.' + mod_name
     mod = get_module(mod_path, py_plugin_path)
     setattr(sys.modules[__name__], mod_name, mod)
+
+
+def loaded(plugin):
+    '''Is plugin loaded?'''
+
+    return cmds.pluginInfo(plugin, q=True, loaded=True)
+
+
+def load(plugin):
+    '''Load plugin'''
+
+    if loaded(plugin):
+        return
+
+    cmds.loadPlugin(plugin)
+
+
+def unload(plugin):
+    '''Unload plugin'''
+
+    if not loaded(plugin):
+        return
+
+    cmds.unloadPlugin(plugin, force=False)
+
+
+def reload(plugin):
+    '''Reload plugin'''
+
+    unload(plugin)
+    load(plugin)

@@ -1,3 +1,9 @@
+'''
+mtoatools.patches
+=================
+Workarounds for various Maya/Arnold issues.
+'''
+
 from maya import cmds, mel
 
 

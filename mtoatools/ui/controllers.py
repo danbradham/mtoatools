@@ -122,10 +122,10 @@ class MayaHooks(QtCore.QObject):
         self.callback_ids = defaultdict(list)
 
 
-class MatteController(MatteDialog):
+class MattesController(MatteDialog):
 
     def __init__(self, parent=get_maya_window()):
-        super(MatteController, self).__init__(parent=parent)
+        super(MattesController, self).__init__(parent=parent)
 
         self.matte_list.itemSelectionChanged.connect(self.matte_list_select)
         self.obj_list.itemSelectionChanged.connect(self.obj_list_select)

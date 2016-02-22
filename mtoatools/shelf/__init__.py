@@ -10,7 +10,7 @@ buttons = {
     'mattes': {
         'command': (
             'import mtoatools\n'
-            'mtoatools.show_matte_aov_ui()'
+            'mtoatools.show_mattes_ui()'
         ),
         'sourceType': 'python',
         'style': 'iconOnly',
