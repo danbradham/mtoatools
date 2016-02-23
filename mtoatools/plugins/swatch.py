@@ -1,9 +1,13 @@
 from tempfile import NamedTemporaryFile
-from PySide import QtGui
-from OpenGL.GL import *
 from collections import Sequence, OrderedDict
 import os
 import sys
+from PySide import QtGui
+try:
+    from OpenGL.GL import *
+    pyopengl_enabled = True
+except ImportError:
+    pyopengl_enabled = False
 from maya import cmds
 import maya.api.OpenMaya as om
 import maya.api.OpenMayaUI as omui
@@ -15,22 +19,7 @@ import maya.OpenMayaRender as omr1
 def maya_useNewAPI():
     pass
 
-glRenderer = omr1.MHardwareRenderer.theRenderer()
-glFT = glRenderer.glFunctionTable()
 TEXTURE_MANAGER = omr.MRenderer.getTextureManager()
-
-verts = (
-    om.MPoint(-1, -1, 0), om.MPoint(-1, 1, 0),
-    om.MPoint(1, 1, 0), om.MPoint(1, -1, 0),
-)
-tris = ([0, 1, 2], [2, 3, 0])
-coords = ([0, 0], [0, 1], [1, 1], [1, 0])
-
-
-def pointarray(l):
-    '''Converts a list of vectors/points to an MPointArray'''
-
-    return om.MPointArray([point(x) for x in l])
 
 
 def get_bytes(plug, resolution):
@@ -64,6 +53,10 @@ class Swatch(omui.MPxLocatorNode):
     name = 'Swatch'
     classification = 'drawdb/geometry/Swatch'
     registrantId = 'SwatchRegistrantId'
+    tris = ([0, 1, 2], [2, 3, 0])
+    verts = (om.MPoint(-1, -1, 0), om.MPoint(-1, 1, 0),
+             om.MPoint(1, 1, 0), om.MPoint(1, -1, 0))
+    coords = ([0, 0], [0, 1], [1, 1], [1, 0])
 
     def __init__(self):
         super(Swatch, self).__init__()
@@ -154,6 +147,9 @@ class Swatch(omui.MPxLocatorNode):
                 self.texture_res = self.res
 
     def draw(self, view, path, style, status):
+        if not pyopengl_enabled:
+            return
+
         self.force_compute()
 
         width = height = self.res
@@ -185,10 +181,10 @@ class Swatch(omui.MPxLocatorNode):
             glColor3f(*self.color)
 
         glBegin(GL_TRIANGLES)
-        for tri in tris:
+        for tri in self.tris:
             for i in tri:
-                uvs = coords[i]
-                vert = verts[i]
+                uvs = self.coords[i]
+                vert = self.verts[i]
                 glTexCoord2f(*uvs)
                 glVertex3f(vert[0], vert[1], vert[2])
         glEnd()
@@ -213,7 +209,6 @@ class SwatchOverride(omr.MPxGeometryOverride):
         self.height = None
         self.color = None
         self._texture = None
-        self.is_file_texture = None
 
     @classmethod
     def creator(cls, obj):
@@ -244,6 +239,7 @@ class SwatchOverride(omr.MPxGeometryOverride):
         return True
 
     def updateDG(self):
+        '''Retrieve and prepare data for drawing'''
 
         self.resolution = self.get_resolution()
         self.width = self.resolution
@@ -258,13 +254,11 @@ class SwatchOverride(omr.MPxGeometryOverride):
             if color_plug.attribute().apiTypeStr != 'kAttribute3Float':
                 self.color = om.MColor([1, 1, 1])
                 self.set_texture(None)
-                self.is_file_texture = False
 
             color_node = color_plug.node()
             if color_node.apiTypeStr == 'kFileTexture':
                 depfn = om.MFnDependencyNode(color_node)
                 file = depfn.findPlug('fileTextureName', False).asString()
-                self.is_file_texture = True
                 self.set_texture(TEXTURE_MANAGER.acquireTexture(
                     '',
                     color_plug,
@@ -272,7 +266,6 @@ class SwatchOverride(omr.MPxGeometryOverride):
                     self.height,
                     False))
             else:
-                self.is_file_texture = False
                 self.set_texture(TEXTURE_MANAGER.acquireTexture(
                     '',
                     color_plug,
@@ -282,7 +275,6 @@ class SwatchOverride(omr.MPxGeometryOverride):
                 )
         else:
             self.set_texture(None)
-            self.is_file_texture = False
             self.color = om.MColor(self.get_color())
 
     def addUIDrawables(self, dagpath, draw_manager, frame_context):
@@ -293,6 +285,7 @@ class SwatchOverride(omr.MPxGeometryOverride):
             draw_manager.setTexture(texture)
         else:
             draw_manager.setColor(self.color)
+
         draw_manager.rect(
             om.MPoint(0, 0, 0),
             om.MVector(0, -1, 0),
@@ -345,6 +338,7 @@ def initializePlugin(obj):
     except:
         sys.stderr.write("Failed to register override\n")
         raise
+
 
 def uninitializePlugin(obj):
     plugin = om.MFnPlugin(obj)

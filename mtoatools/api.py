@@ -60,8 +60,6 @@ def apply_swatch(lights=None):
                           dv=1, k=True)
 
         sw_xform, sw_shape = swatch(str(xform) + '_swatch')
-        cmds.setAttr(sw_shape + '.overrideEnabled', True)
-        cmds.setAttr(sw_shape + '.overrideDisplayType', 2)
 
         cmds.connectAttr(shape + '.color', sw_shape + '.inColor')
         cmds.connectAttr(shape + '.viewportResolution',
@@ -70,6 +68,13 @@ def apply_swatch(lights=None):
                          sw_shape + '.visibility')
 
         cmds.parent(sw_xform, xform, relative=True)
+
+        cmds.setAttr(shape + '.viewportPreview', False)
+        cmds.refresh()
+        cmds.setAttr(shape + '.viewportPreview', True)
+        cmds.refresh()
+        cmds.setAttr(sw_shape + '.overrideEnabled', True)
+        cmds.setAttr(sw_shape + '.overrideDisplayType', 2)
         swatches.append((sw_xform, sw_shape))
 
     return swatches
