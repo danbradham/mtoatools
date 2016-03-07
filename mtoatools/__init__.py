@@ -4,7 +4,7 @@ __title__ = 'mtoatools'
 __author__ = 'Dan Bradham'
 __email__ = 'danielbradham@gmail.com'
 __url__ = 'http://github.com//mtoatools.git'
-__version__ = '0.1.4'
+__version__ = '0.1.5'
 __license__ = 'MIT'
 __description__ = 'Arnold for Autodesk Maya tools'
 

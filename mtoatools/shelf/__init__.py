@@ -2,11 +2,12 @@ import os
 from maya import mel, cmds
 from PySide import QtGui
 from functools import partial
+from collections import OrderedDict
 
 this_package = os.path.abspath(os.path.dirname(__file__))
 shelf_path = partial(os.path.join, this_package)
 
-buttons = {
+buttons = OrderedDict({
     'mattes': {
         'command': (
             'import mtoatools\n'
@@ -16,6 +17,20 @@ buttons = {
         'style': 'iconOnly',
         'image': shelf_path('mtoatools_mattes.png'),
         'annotation': 'AOV Matte management',
+        'enableCommandRepeat': False,
+        'useAlpha': True,
+        'flat': True,
+        'enableBackground': False,
+    },
+    'hdrig': {
+        'command': (
+            'import mtoatools\n'
+            'mtoatools.create_hdr_rig()'
+        ),
+        'sourceType': 'python',
+        'style': 'iconOnly',
+        'image': shelf_path('mtoatools_hdrig.png'),
+        'annotation': 'HDR Light Rig',
         'enableCommandRepeat': False,
         'useAlpha': True,
         'flat': True,
@@ -49,7 +64,7 @@ buttons = {
         'flat': True,
         'enableBackground': False,
     }
-}
+})
 
 
 def create_shelf():

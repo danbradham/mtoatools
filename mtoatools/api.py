@@ -8,6 +8,7 @@ from collections import Sequence
 from maya import cmds
 from .models import MatteAOV
 from .plugins import load
+from .hdr import create_hdr_rig
 
 
 def matte_aov(name):
