@@ -45,6 +45,12 @@ At any point you can delete a matte or remove a shape from a matte by clicking t
 
 |removehighlight|
 
+
+Renaming Mattes
+===============
+Double click on a matte list item to rename a matte. Press escape to abort.
+
+
 The how and why of mtoatools.mattes
 ===================================
 The basic setup is to have an mtoa\_constant\_\* double3 attribute on each shape, and an AOV with an aiUserDataColor node plugged into its defaultValue. The aiUserDataColor pulls the color from the shape node mtoa\_constant\_\* attribute. This setup is extremely flexible, but very hard to manage all the custom attributes by hand. Thus, mtoatools.mattes was created.
