@@ -214,13 +214,20 @@ class MattesController(MatteDialog):
         item = QtGui.QListWidgetItem()
         item.pynode = aov
 
-        del_callback = partial(self.delete_matte_item, item, aov)
         widget = MatteWidget(aov.name)
+
+        del_callback = partial(self.delete_matte_item, item, aov)
         widget.del_button.clicked.connect(del_callback)
+
+        ren_callback = partial(self.rename_matte_item, item, aov)
+        widget.edited.connect(ren_callback)
 
         item.setSizeHint(widget.sizeHint())
         self.matte_list.addItem(item)
         self.matte_list.setItemWidget(item, widget)
+
+    def rename_matte_item(self, item, aov, new_name):
+        aov.rename(new_name)
 
     def delete_matte_item(self, item, aov):
         self.matte_list.takeItem(self.matte_list.indexFromItem(item).row())
@@ -262,13 +269,11 @@ class MattesController(MatteDialog):
         self.maya_hooks.add_about_to_delete_callback(node, del_callback)
 
     def clear_lists(self):
-        print 'CLEARING LISTS'
         self.maya_hooks.clear_callbacks()
         self.matte_list.clear()
         self.obj_list.clear()
 
     def refresh_matte_list(self):
-        print 'REFRESHING MATTE LISTS'
         self.maya_hooks.clear_callbacks()
         self.matte_list.clear()
         self.obj_list.clear()

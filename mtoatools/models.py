@@ -54,8 +54,8 @@ def create_aov(name, _type):
     :param name: Name of the new aov
     :param _type: Type of the aov to create
     '''
-    import mtoa.aovs
 
+    import mtoa.aovs
     return mtoa.aovs.AOVInterface().addAOV(name, aovType=_type)
 
 
@@ -96,6 +96,25 @@ class MatteAOV(object):
     @property
     def name(self):
         return self.aov.attr('name').get()
+
+    def rename(self, name):
+        name = self.get_unused_name(name)
+        mesh_attr_name = 'mtoa_constant_' + name
+
+        # Rename mesh attributes
+        for obj in self.get_objects():
+            old_attr = str(obj.attr(self.mesh_attr_name))
+            pmc.renameAttr(old_attr, mesh_attr_name)
+            for c in 'RGB':
+                pmc.renameAttr(old_attr + c, mesh_attr_name + c)
+
+        # Rename AOV
+        self.aov.attr('name').set(name)
+        self.aov.rename('aiAOV_' + name)
+
+        # Rename aiUserData and change attribute name
+        self.user_data.rename(name + '_color')
+        self.user_data.colorAttrName.set(name)
 
     @property
     def color_attr_name(self):

@@ -133,6 +133,8 @@ class ObjectWidget(QtGui.QWidget):
 
 class MatteWidget(QtGui.QWidget):
 
+    edited = QtCore.Signal(str)
+
     def __init__(self, text, *args, **kwargs):
         super(MatteWidget, self).__init__(*args, **kwargs)
 
@@ -152,13 +154,66 @@ class MatteWidget(QtGui.QWidget):
         style = 'QLabel{font-size: 14px;}'
         self.label.setStyleSheet(style)
 
+        self.editor = QtGui.QLineEdit()
+        self.editor.setSizePolicy(
+            QtGui.QSizePolicy.Expanding,
+            QtGui.QSizePolicy.Minimum
+        )
+        style = 'QLineEdit{font-size: 14px; border:0;}'
+        self.editor.setStyleSheet(style)
+        self.editor.editingFinished.connect(self.finish_edit)
+        self.editor.installEventFilter(self)
+
+        self.editor.hide()
+
         self.del_button = IconButton(
             icon=ui_path('icons', 'delete.png'),
             icon_hover=ui_path('icons', 'delete_pressed.png'),
         )
 
         self.layout.addWidget(self.label)
+        self.layout.addWidget(self.editor)
         self.layout.addWidget(self.del_button)
+
+        self.installEventFilter(self)
+
+    def eventFilter(self, widget, event):
+        '''Start editing when MatteWidget is double clicked...'''
+
+        if widget == self.editor:
+            if (event.type() == QtCore.QEvent.KeyPress
+                and event.key() == QtCore.Qt.Key_Escape):
+
+                self.abort_edit()
+                return True
+
+        if event.type() == QtCore.QEvent.MouseButtonDblClick:
+            self.start_edit()
+            return True
+
+        return super(MatteWidget, self).eventFilter(widget, event)
+
+    def start_edit(self):
+        self.label.hide()
+        self.editor.setText(self.label.text())
+        self.editor.show()
+        self.editor.setFocus()
+        self.editor.selectAll()
+
+    def abort_edit(self):
+        self.editor.setText(self.label.text())
+        self.editor.hide()
+        self.label.show()
+
+    def finish_edit(self):
+        self.editor.hide()
+        old_label = self.label.text()
+        self.label.setText(self.editor.text())
+        new_label = self.label.text()
+        self.label.show()
+
+        if new_label != old_label:
+            self.edited.emit(new_label)
 
 
 class MatteList(QtGui.QListWidget):
