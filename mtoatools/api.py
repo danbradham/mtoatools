@@ -9,6 +9,7 @@ from maya import cmds
 from .models import MatteAOV
 from .plugins import load
 from .hdr import create_hdr_rig
+from .packages import yaml
 
 
 def matte_aov(name):
@@ -79,6 +80,24 @@ def apply_swatch(lights=None):
         swatches.append((sw_xform, sw_shape))
 
     return swatches
+
+
+def save_mattes(mattes, filepath):
+
+    data = [matte.data() for matte in mattes]
+    serialized = yaml.safe_dump(data)
+
+    with open(filepath, 'w') as f:
+        f.write(serialized)
+
+
+def load_mattes(filepath):
+
+    with open(filepath, 'w') as f:
+        data = yaml.load(f.read())
+
+    for matte_data in data:
+        MatteAOV.load(matte_data)
 
 
 def show_mattes_ui(instance=[]):

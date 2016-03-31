@@ -5,9 +5,12 @@ from contextlib import contextmanager
 from PySide import QtGui, QtCore
 import pymel.core as pmc
 from maya import OpenMaya
-from .dialogs import MatteDialog, MatteWidget, ObjectWidget, ObjectItem
+from .dialogs import (MatteDialog, MatteWidget, ObjectWidget, ObjectItem,
+                      MatteSaveDialog, MatteLoadDialog)
 from .utils import get_maya_window
-from ..api import MatteAOV
+from ..packages import yaml
+from ..models import MatteAOV
+from ..api import save_mattes
 
 
 _MAYA_MADE_SELECTION_ = False
@@ -127,6 +130,13 @@ class MattesController(MatteDialog):
     def __init__(self, parent=get_maya_window()):
         super(MattesController, self).__init__(parent=parent)
 
+        load_action = QtGui.QAction('&Load', self)
+        load_action.triggered.connect(self.load)
+        save_action = QtGui.QAction('&Save', self)
+        save_action.triggered.connect(self.save)
+        self.file_menu.addAction(load_action)
+        self.file_menu.addAction(save_action)
+
         self.matte_list.itemSelectionChanged.connect(self.matte_list_select)
         self.obj_list.itemSelectionChanged.connect(self.obj_list_select)
         self.button_new.clicked.connect(self.new_clicked)
@@ -241,8 +251,13 @@ class MattesController(MatteDialog):
         self.obj_list.sortItems()
 
     def delete_obj_item(self, item):
-        self.obj_list.takeItem(self.obj_list.indexFromItem(item).row())
-        self.aov.discard(item.pynode)
+        try:
+            self.obj_list.takeItem(self.obj_list.indexFromItem(item).row())
+            self.aov.discard(item.pynode)
+        except RuntimeError as e:
+            if "Internal C++ object (ObjectItem) already deleted" in str(e):
+                pass
+            raise
 
     def new_obj_item(self, node, color):
 
@@ -309,6 +324,87 @@ class MattesController(MatteDialog):
 
         with ui_made_selection():
             pmc.select(nodes, replace=True)
+
+    def save(self):
+
+        dialog = MatteSaveDialog(self)
+
+        for matte in MatteAOV.ls():
+            item = QtGui.QListWidgetItem(matte.name)
+            item.matte = matte
+            dialog.matte_list.addItem(item)
+
+        dialog.matte_list.selectAll()
+
+        def on_accepted():
+            items = dialog.matte_list.selectedItems()
+            if not items:
+                return
+            mattes = [item.matte for item in items]
+
+            scene = pmc.sceneName()
+            mattes_name = os.path.splitext(os.path.basename(scene))[0]
+            mattes_dir = os.path.join(os.path.dirname(scene), 'mattes')
+            mattes_path = os.path.join(mattes_dir, mattes_name + '.yml')
+            if not os.path.exists(mattes_dir):
+                os.makedirs(mattes_dir)
+
+            filepath, filters = QtGui.QFileDialog.getSaveFileName(
+                self,
+                'Save Matte AOVS',
+                mattes_path,
+                'Yaml (*.yml *.yaml)'
+            )
+
+            if filepath:
+                save_mattes(mattes, filepath)
+
+        dialog.accepted.connect(on_accepted)
+        dialog.exec_()
+
+    def load(self):
+
+        scene = pmc.sceneName()
+        mattes_name = os.path.splitext(os.path.basename(scene))[0]
+        mattes_dir = os.path.join(os.path.dirname(scene), 'mattes')
+
+        filepath, filters = QtGui.QFileDialog.getOpenFileName(
+            self,
+            'Load Matte AOVS',
+            mattes_dir,
+            'Yaml (*.yml *.yaml)'
+        )
+
+        if not filepath:
+            return
+
+        with open(filepath, 'r') as f:
+            data = yaml.load(f.read())
+
+        dialog = MatteLoadDialog(self)
+
+        for matte_data in data:
+            item = QtGui.QListWidgetItem(matte_data['name'])
+            item.matte_data = matte_data
+            dialog.matte_list.addItem(item)
+
+        dialog.matte_list.selectAll()
+
+        def on_accepted():
+            items = dialog.matte_list.selectedItems()
+            if not items:
+                return
+
+            ignore_namespaces = dialog.ignore_namespaces.isChecked()
+
+            data = [item.matte_data for item in items]
+            for matte_data in data:
+                MatteAOV.load(matte_data, ignore_namespaces)
+
+            self.refresh_matte_list()
+
+        dialog.accepted.connect(on_accepted)
+        dialog.exec_()
 
     def show_help(self):
         import webbrowser

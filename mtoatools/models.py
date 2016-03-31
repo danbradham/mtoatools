@@ -7,6 +7,7 @@ from operator import itemgetter
 from collections import defaultdict
 import pymel.core as pmc
 from .utils import add_vector_attr, get_next_name
+from .packages import yaml
 
 __all__ = ['Defaults', 'create_aov', 'MatteAOV']
 
@@ -68,6 +69,13 @@ class MatteAOV(object):
         self.aov = aov
         self.user_data = user_data
 
+    def __repr__(self):
+        return '<MatteAOV>({}, {})'.format(str(self.aov), str(self.user_data))
+
+    def __iter__(self):
+        for node in self.get_objects():
+            yield node, node.attr(self.mesh_attr_name).get()
+
     @classmethod
     def create(cls, name):
         name = cls.get_unused_name(name)
@@ -86,6 +94,15 @@ class MatteAOV(object):
         aov.set_objects_color((1, 1, 1), *selected)
 
         return aov
+
+    @classmethod
+    def ls(cls):
+        aovs = []
+        for node in pmc.ls('*.is_aov_matte', r=True, objectsOnly=True):
+            inputs = node.defaultValue.inputs()
+            if inputs:
+                aovs.append(cls(node, inputs[0]))
+        return aovs
 
     @staticmethod
     def get_unused_name(name):
@@ -136,10 +153,6 @@ class MatteAOV(object):
         ls = set(pmc.ls('*.' + self.mesh_attr_name, r=True, objectsOnly=True))
         return list(ls)
 
-    def __iter__(self):
-        for node in self.get_objects():
-            yield node, node.attr(self.mesh_attr_name).get()
-
     def add(self, *nodes):
         added_nodes = []
         for node in nodes:
@@ -181,11 +194,57 @@ class MatteAOV(object):
         pmc.delete(self.aov)
         pmc.delete(self.user_data)
 
+    def data(self):
+        '''Simple dict representation of matte aov for use with serialization
+        '''
+
+        data = {'name': self.name, 'shapes': []}
+        for obj in self.get_objects():
+            full_name = str(obj)
+            parts = full_name.split(':')
+
+            if len(parts) > 1:
+                namespace = ':'.join(parts[:-1])
+                name = parts[-1]
+            else:
+                namespace = None
+                name = full_name
+
+            data['shapes'].append({
+                'name': name,
+                'namespace': namespace,
+                'color': tuple(obj.attr(self.mesh_attr_name).get())
+            })
+
+        return data
+
+    def yaml(self):
+        '''Serialize MatteAOV'''
+
+        return yaml.safe_dump(self.data())
+
     @classmethod
-    def ls(cls):
-        aovs = []
-        for node in pmc.ls('*.is_aov_matte', r=True, objectsOnly=True):
-            inputs = node.defaultValue.inputs()
-            if inputs:
-                aovs.append(cls(node, inputs[0]))
-        return aovs
+    def load(cls, data, ignore_namespaces=False):
+        '''Deserialize a MatteAOV from a yaml string or a data dict'''
+
+        if isinstance(data, basestring):
+            data = yaml.load(data)
+
+        matte_name = 'aiAOV_' + data['name']
+        if not pmc.objExists(matte_name):
+            aov = cls.create(data['name'])
+        else:
+            pyaov = pmc.PyNode(matte_name)
+            pyuserdata = pmc.PyNode(data['name'] + '_color')
+            aov = cls(pyaov, pyuserdata)
+
+        for shape in data['shapes']:
+            if ignore_namespaces or not shape['namespace']:
+                name = shape['name']
+                matches = pmc.ls(name, r=True)
+            else:
+                name = shape['namespace'] + ':' + shape['name']
+                matches = pmc.ls(name)
+            aov.set_objects_color(shape['color'], *matches)
+
+        return aov

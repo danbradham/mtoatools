@@ -4,6 +4,16 @@
 History
 =======
 
+
+0.3.0 (03312016)
+----------------
+
+* Added MatteAOV serialization
+
+  * api methods (save_mattes, load_mattes)
+  * added menubar supporting serialization to MatteDialog
+
+
 0.2.0 (03302016)
 ----------------
 

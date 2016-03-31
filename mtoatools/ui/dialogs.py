@@ -268,10 +268,70 @@ class Header(QtGui.QWidget):
         self.layout.addWidget(self.button_help)
 
 
+class MatteSaveDialog(QtGui.QDialog):
+
+    def __init__(self, *args, **kwargs):
+        super(MatteSaveDialog, self).__init__(*args, **kwargs)
+
+        self.label = QtGui.QLabel('Save selected mattes')
+
+        self.matte_list = MatteList()
+        self.matte_list.setSelectionMode(
+            QtGui.QAbstractItemView.ExtendedSelection
+        )
+
+        self.button_box = QtGui.QDialogButtonBox(
+            QtGui.QDialogButtonBox.Save | QtGui.QDialogButtonBox.Cancel
+        )
+        self.button_box.accepted.connect(self.accept)
+        self.button_box.rejected.connect(self.reject)
+
+        self.layout = QtGui.QVBoxLayout()
+        self.layout.addWidget(self.label)
+        self.layout.addWidget(self.matte_list)
+        self.layout.addWidget(self.button_box)
+        self.setLayout(self.layout)
+        self.setWindowTitle('Save Matte AOVS')
+
+
+class MatteLoadDialog(QtGui.QDialog):
+
+    def __init__(self, *args, **kwargs):
+        super(MatteLoadDialog, self).__init__(*args, **kwargs)
+
+        self.label = QtGui.QLabel('Load selected mattes')
+
+        self.matte_list = MatteList()
+        self.matte_list.setSelectionMode(
+            QtGui.QAbstractItemView.ExtendedSelection
+        )
+
+        self.ignore_namespaces = QtGui.QCheckBox('ignore namespaces')
+
+        self.button_box = QtGui.QDialogButtonBox(
+            QtGui.QDialogButtonBox.Apply | QtGui.QDialogButtonBox.Cancel
+        )
+        self.button_box.button(QtGui.QDialogButtonBox.Apply).clicked.connect(
+            self.accept
+        )
+        self.button_box.rejected.connect(self.reject)
+
+        self.layout = QtGui.QVBoxLayout()
+        self.layout.addWidget(self.label)
+        self.layout.addWidget(self.matte_list)
+        self.layout.addWidget(self.ignore_namespaces)
+        self.layout.addWidget(self.button_box)
+        self.setLayout(self.layout)
+        self.setWindowTitle('Load Matte AOVS')
+
+
 class MatteDialog(QtGui.QDialog):
 
     def __init__(self, *args, **kwargs):
         super(MatteDialog, self).__init__(*args, **kwargs)
+
+        self.menu_bar = QtGui.QMenuBar()
+        self.file_menu = self.menu_bar.addMenu('file')
 
         self.header = Header('mtoatools.mattes')
         self.button_refresh = self.header.button_refresh
@@ -331,8 +391,9 @@ class MatteDialog(QtGui.QDialog):
         self.layout = QtGui.QGridLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setSpacing(0)
-        self.layout.setRowStretch(1, 1)
-        self.layout.addWidget(self.header, 0, 0)
-        self.layout.addLayout(self.grid, 1, 0)
+        self.layout.setRowStretch(2, 1)
+        self.layout.addWidget(self.menu_bar, 0, 0)
+        self.layout.addWidget(self.header, 1, 0)
+        self.layout.addLayout(self.grid, 2, 0)
         self.setLayout(self.layout)
         self.setStyleSheet(get_style())
