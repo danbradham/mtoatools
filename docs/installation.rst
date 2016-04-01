@@ -20,6 +20,10 @@ Git
     $ cd mtoatools
     $ python setup.py install
 
+Direct from GitHub
+------------------
+Visit the github repo at http://github.com/danbradham/mtoatools.git and click the *Download Zip* button. Extract mtoatools_master/mtoatools folder directly to your maya scripts directory.
+
 
 Installing the maya shelf
 =========================

@@ -6,7 +6,17 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 import mock
-module_names = ['pymel', 'pmc', 'pymel.core', 'maya', 'PySide']
+module_names = [
+    'pymel',
+    'pymel.core',
+    'maya',
+    'PySide',
+    'maya.api',
+    'maya.api.OpenMaya',
+    'maya.api.OpenMayaUI',
+    'maya.api.OpenMayaRender',
+    'maya.api.OpenMayaAnim',
+    'maya.OpenMayaRender']
 sys.modules.update(dict((name, mock.MagicMock()) for name in module_names))
 
 import mtoatools
