@@ -56,4 +56,5 @@ setup(
         "Programming Language :: Python",
         'Programming Language :: Python :: 2',
     ),
+    install_requires=['Qt.py'],
 )

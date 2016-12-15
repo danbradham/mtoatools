@@ -1,6 +1,6 @@
 import os
 from maya import mel, cmds
-from PySide import QtGui
+from Qt import QtWidgets, QtGui
 from functools import partial
 from collections import OrderedDict
 
@@ -85,5 +85,6 @@ def create_shelf():
         kwargs['height'] = img.height()
 
         cmds.shelfButton(label=button, parent=shelf, **kwargs)
+
 
 create_shelf()

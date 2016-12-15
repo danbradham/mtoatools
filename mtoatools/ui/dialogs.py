@@ -1,7 +1,8 @@
-from PySide import QtGui, QtCore
+from Qt import QtWidgets, QtCore, QtGui
 import os
 
 this_package = os.path.dirname(__file__)
+
 
 def ui_path(*paths):
     return os.path.join(this_package, *paths)
@@ -31,7 +32,7 @@ def get_icon(name, cache={}):
     return icon
 
 
-class IconButton(QtGui.QLabel):
+class IconButton(QtWidgets.QLabel):
 
     clicked = QtCore.Signal()
     cache = {}
@@ -39,9 +40,9 @@ class IconButton(QtGui.QLabel):
     def __init__(self, icon, icon_hover, *args, **kwargs):
         super(IconButton, self).__init__(*args, **kwargs)
 
-        if not icon in self.cache:
+        if icon not in self.cache:
             self.cache[icon] = QtGui.QPixmap(QtGui.QImage(icon))
-        if not icon_hover in self.cache:
+        if icon_hover not in self.cache:
             self.cache[icon_hover] = QtGui.QPixmap(QtGui.QImage(icon_hover))
 
         self.normal = self.cache[icon]
@@ -76,7 +77,7 @@ class IconButton(QtGui.QLabel):
         super(IconButton, self).leaveEvent(event)
 
 
-class ObjectItem(QtGui.QListWidgetItem):
+class ObjectItem(QtWidgets.QListWidgetItem):
 
     def __init__(self, aov, pynode, widget, *args, **kwargs):
         super(ObjectItem, self).__init__(*args, **kwargs)
@@ -94,14 +95,14 @@ class ObjectItem(QtGui.QListWidgetItem):
         self.widget.set_color(*self.color())
 
 
-class ObjectWidget(QtGui.QWidget):
+class ObjectWidget(QtWidgets.QWidget):
 
     color_cache = {}
 
     def __init__(self, text, *args, **kwargs):
         super(ObjectWidget, self).__init__(*args, **kwargs)
 
-        self.layout = QtGui.QHBoxLayout()
+        self.layout = QtWidgets.QHBoxLayout()
         self.setLayout(self.layout)
 
         if '|' in text:
@@ -109,10 +110,10 @@ class ObjectWidget(QtGui.QWidget):
         if len(text) > 24:
             text = text[:24] + '...'
 
-        self.label = QtGui.QLabel(text)
+        self.label = QtWidgets.QLabel(text)
         self.label.setSizePolicy(
-            QtGui.QSizePolicy.Expanding,
-            QtGui.QSizePolicy.Minimum
+            QtWidgets.QSizePolicy.Expanding,
+            QtWidgets.QSizePolicy.Minimum
         )
 
         self.del_button = IconButton(
@@ -124,21 +125,21 @@ class ObjectWidget(QtGui.QWidget):
         self.layout.addWidget(self.del_button)
 
     def set_color(self, *color):
-        if not color in self.color_cache:
+        if color not in self.color_cache:
             style = 'QLabel{{ color:rgb({},{},{}); font-size: 14px;}}'
             self.color_cache[color] = style.format(*[c * 255 for c in color])
 
         self.label.setStyleSheet(self.color_cache[color])
 
 
-class MatteWidget(QtGui.QWidget):
+class MatteWidget(QtWidgets.QWidget):
 
     edited = QtCore.Signal(str)
 
     def __init__(self, text, *args, **kwargs):
         super(MatteWidget, self).__init__(*args, **kwargs)
 
-        self.layout = QtGui.QHBoxLayout()
+        self.layout = QtWidgets.QHBoxLayout()
         self.setLayout(self.layout)
 
         if '|' in text:
@@ -146,18 +147,18 @@ class MatteWidget(QtGui.QWidget):
         if len(text) > 24:
             text = text[:24] + '...'
 
-        self.label = QtGui.QLabel(text)
+        self.label = QtWidgets.QLabel(text)
         self.label.setSizePolicy(
-            QtGui.QSizePolicy.Expanding,
-            QtGui.QSizePolicy.Minimum
+            QtWidgets.QSizePolicy.Expanding,
+            QtWidgets.QSizePolicy.Minimum
         )
         style = 'QLabel{font-size: 14px;}'
         self.label.setStyleSheet(style)
 
-        self.editor = QtGui.QLineEdit()
+        self.editor = QtWidgets.QLineEdit()
         self.editor.setSizePolicy(
-            QtGui.QSizePolicy.Expanding,
-            QtGui.QSizePolicy.Minimum
+            QtWidgets.QSizePolicy.Expanding,
+            QtWidgets.QSizePolicy.Minimum
         )
         style = 'QLineEdit{font-size: 14px; border:0;}'
         self.editor.setStyleSheet(style)
@@ -181,9 +182,9 @@ class MatteWidget(QtGui.QWidget):
         '''Start editing when MatteWidget is double clicked...'''
 
         if widget == self.editor:
-            if (event.type() == QtCore.QEvent.KeyPress
-                and event.key() == QtCore.Qt.Key_Escape):
-
+            is_keypress = (event.type() == QtCore.QEvent.KeyPress)
+            is_keyesc = (event.key() == QtCore.Qt.Key_Escape)
+            if is_keypress and is_keyesc:
                 self.abort_edit()
                 return True
 
@@ -216,7 +217,7 @@ class MatteWidget(QtGui.QWidget):
             self.edited.emit(new_label)
 
 
-class MatteList(QtGui.QListWidget):
+class MatteList(QtWidgets.QListWidget):
 
     def __init__(self, *args, **kwargs):
         super(MatteList, self).__init__(*args, **kwargs)
@@ -224,16 +225,16 @@ class MatteList(QtGui.QListWidget):
         self.setSortingEnabled(True)
 
 
-class ObjectList(QtGui.QListWidget):
+class ObjectList(QtWidgets.QListWidget):
 
     def __init__(self, *args, **kwargs):
         super(ObjectList, self).__init__(*args, **kwargs)
-        self.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
+        self.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         self.setObjectName('objectlist')
         self.setSortingEnabled(True)
 
 
-class Header(QtGui.QWidget):
+class Header(QtWidgets.QWidget):
 
     def __init__(self, text, parent=None):
         super(Header, self).__init__(parent=parent)
@@ -241,23 +242,23 @@ class Header(QtGui.QWidget):
         self.setFixedHeight(40)
         self.setAttribute(QtCore.Qt.WA_StyledBackground, True)
         self.setObjectName('header')
-        self.layout = QtGui.QHBoxLayout()
+        self.layout = QtWidgets.QHBoxLayout()
         self.layout.setContentsMargins(20, 0, 20, 0)
         self.setLayout(self.layout)
 
-        self.icon = QtGui.QLabel()
+        self.icon = QtWidgets.QLabel()
         self.icon.setFixedSize(32, 32)
         self.icon.setPixmap(QtGui.QPixmap(ui_path('icons', 'icon.png')))
 
-        self.label = QtGui.QLabel(text)
+        self.label = QtWidgets.QLabel(text)
         self.label.setObjectName('header_label')
 
-        self.button_refresh = QtGui.QPushButton(get_icon('refresh'), '')
+        self.button_refresh = QtWidgets.QPushButton(get_icon('refresh'), '')
         self.button_refresh.setFixedSize(32, 32)
         self.button_refresh.setToolTip('Refresh')
         self.button_refresh.setObjectName('headerbutton')
 
-        self.button_help = QtGui.QPushButton(get_icon('help'), '')
+        self.button_help = QtWidgets.QPushButton(get_icon('help'), '')
         self.button_help.setFixedSize(32, 32)
         self.button_help.setToolTip('Help')
         self.button_help.setObjectName('headerbutton')
@@ -268,25 +269,25 @@ class Header(QtGui.QWidget):
         self.layout.addWidget(self.button_help)
 
 
-class MatteSaveDialog(QtGui.QDialog):
+class MatteSaveDialog(QtWidgets.QDialog):
 
     def __init__(self, *args, **kwargs):
         super(MatteSaveDialog, self).__init__(*args, **kwargs)
 
-        self.label = QtGui.QLabel('Save selected mattes')
+        self.label = QtWidgets.QLabel('Save selected mattes')
 
         self.matte_list = MatteList()
         self.matte_list.setSelectionMode(
-            QtGui.QAbstractItemView.ExtendedSelection
+            QtWidgets.QAbstractItemView.ExtendedSelection
         )
 
-        self.button_box = QtGui.QDialogButtonBox(
-            QtGui.QDialogButtonBox.Save | QtGui.QDialogButtonBox.Cancel
+        self.button_box = QtWidgets.QDialogButtonBox(
+            QtWidgets.QDialogButtonBox.Save | QtWidgets.QDialogButtonBox.Cancel
         )
         self.button_box.accepted.connect(self.accept)
         self.button_box.rejected.connect(self.reject)
 
-        self.layout = QtGui.QVBoxLayout()
+        self.layout = QtWidgets.QVBoxLayout()
         self.layout.addWidget(self.label)
         self.layout.addWidget(self.matte_list)
         self.layout.addWidget(self.button_box)
@@ -294,29 +295,29 @@ class MatteSaveDialog(QtGui.QDialog):
         self.setWindowTitle('Save Matte AOVS')
 
 
-class MatteLoadDialog(QtGui.QDialog):
+class MatteLoadDialog(QtWidgets.QDialog):
 
     def __init__(self, *args, **kwargs):
         super(MatteLoadDialog, self).__init__(*args, **kwargs)
 
-        self.label = QtGui.QLabel('Load selected mattes')
+        self.label = QtWidgets.QLabel('Load selected mattes')
 
         self.matte_list = MatteList()
         self.matte_list.setSelectionMode(
-            QtGui.QAbstractItemView.ExtendedSelection
+            QtWidgets.QAbstractItemView.ExtendedSelection
         )
 
-        self.ignore_namespaces = QtGui.QCheckBox('ignore namespaces')
+        self.ignore_namespaces = QtWidgets.QCheckBox('ignore namespaces')
 
-        self.button_box = QtGui.QDialogButtonBox(
-            QtGui.QDialogButtonBox.Apply | QtGui.QDialogButtonBox.Cancel
+        self.button_box = QtWidgets.QDialogButtonBox(
+            QtWidgets.QDialogButtonBox.Apply | QtWidgets.QDialogButtonBox.Cancel
         )
-        self.button_box.button(QtGui.QDialogButtonBox.Apply).clicked.connect(
+        self.button_box.button(QtWidgets.QDialogButtonBox.Apply).clicked.connect(
             self.accept
         )
         self.button_box.rejected.connect(self.reject)
 
-        self.layout = QtGui.QVBoxLayout()
+        self.layout = QtWidgets.QVBoxLayout()
         self.layout.addWidget(self.label)
         self.layout.addWidget(self.matte_list)
         self.layout.addWidget(self.ignore_namespaces)
@@ -325,52 +326,52 @@ class MatteLoadDialog(QtGui.QDialog):
         self.setWindowTitle('Load Matte AOVS')
 
 
-class MatteDialog(QtGui.QDialog):
+class MatteDialog(QtWidgets.QDialog):
 
     def __init__(self, *args, **kwargs):
         super(MatteDialog, self).__init__(*args, **kwargs)
 
-        self.menu_bar = QtGui.QMenuBar()
+        self.menu_bar = QtWidgets.QMenuBar()
         self.file_menu = self.menu_bar.addMenu('file')
 
         self.header = Header('mtoatools.mattes')
         self.button_refresh = self.header.button_refresh
         self.button_help = self.header.button_help
 
-        self.grid = QtGui.QGridLayout()
+        self.grid = QtWidgets.QGridLayout()
         self.grid.setContentsMargins(20, 20, 20, 20)
         self.grid.setSpacing(10)
         self.grid.setColumnStretch(0, 1)
         self.grid.setRowStretch(2, 1)
         self.grid.setColumnMinimumWidth(3, 30)
 
-        self.matte_label = QtGui.QLabel('Matte AOVS')
+        self.matte_label = QtWidgets.QLabel('Matte AOVS')
         self.matte_label.setObjectName('title')
-        self.matte_line = QtGui.QLineEdit()
-        self.button_new = QtGui.QPushButton(get_icon('plus'), '')
+        self.matte_line = QtWidgets.QLineEdit()
+        self.button_new = QtWidgets.QPushButton(get_icon('plus'), '')
         self.button_new.setFixedSize(32, 32)
         self.button_new.setToolTip('Add a new matte')
         self.matte_list = MatteList()
 
-        self.obj_label = QtGui.QLabel('Shapes')
+        self.obj_label = QtWidgets.QLabel('Shapes')
         self.obj_label.setObjectName('title')
         self.obj_list = ObjectList()
-        self.button_add = QtGui.QPushButton(get_icon('plus'), '')
+        self.button_add = QtWidgets.QPushButton(get_icon('plus'), '')
         self.button_add.setFixedSize(32, 32)
         self.button_add.setToolTip('Add selected transforms')
-        self.button_red = QtGui.QPushButton()
+        self.button_red = QtWidgets.QPushButton()
         self.button_red.setFixedSize(32, 32)
         self.button_red.setObjectName('red')
-        self.button_green = QtGui.QPushButton()
+        self.button_green = QtWidgets.QPushButton()
         self.button_green.setFixedSize(32, 32)
         self.button_green.setObjectName('green')
-        self.button_blue = QtGui.QPushButton()
+        self.button_blue = QtWidgets.QPushButton()
         self.button_blue.setFixedSize(32, 32)
         self.button_blue.setObjectName('blue')
-        self.button_white = QtGui.QPushButton()
+        self.button_white = QtWidgets.QPushButton()
         self.button_white.setFixedSize(32, 32)
         self.button_white.setObjectName('white')
-        self.button_black = QtGui.QPushButton()
+        self.button_black = QtWidgets.QPushButton()
         self.button_black.setFixedSize(32, 32)
         self.button_black.setObjectName('black')
 
@@ -388,7 +389,7 @@ class MatteDialog(QtGui.QDialog):
         self.grid.addWidget(self.button_add, 1, 9, 1, 1)
         self.grid.addWidget(self.obj_list, 2, 4, 1, 6)
 
-        self.layout = QtGui.QGridLayout()
+        self.layout = QtWidgets.QGridLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setSpacing(0)
         self.layout.setRowStretch(2, 1)

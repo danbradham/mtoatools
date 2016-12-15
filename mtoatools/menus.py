@@ -1,10 +1,9 @@
-from PySide import QtCore, QtGui
+from Qt import QtCore, QtWidgets, QtGui
 from .ui.utils import get_maya_window
-from maya import cmds
 from .patches import fix_aov_alias_attrs, fix_render_globals_window
 
 
-class PatchesMenu(QtGui.QMenu):
+class PatchesMenu(QtWidgets.QMenu):
 
     _instance = None
 

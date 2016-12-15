@@ -2,7 +2,7 @@ import os
 from functools import partial
 from collections import defaultdict
 from contextlib import contextmanager
-from PySide import QtGui, QtCore
+from Qt import QtWidgets, QtCore
 import pymel.core as pmc
 from maya import OpenMaya
 from .dialogs import (MatteDialog, MatteWidget, ObjectWidget, ObjectItem,
@@ -130,9 +130,9 @@ class MattesController(MatteDialog):
     def __init__(self, parent=get_maya_window()):
         super(MattesController, self).__init__(parent=parent)
 
-        load_action = QtGui.QAction('&Load', self)
+        load_action = QtWidgets.QAction('&Load', self)
         load_action.triggered.connect(self.load)
-        save_action = QtGui.QAction('&Save', self)
+        save_action = QtWidgets.QAction('&Save', self)
         save_action.triggered.connect(self.save)
         self.file_menu.addAction(load_action)
         self.file_menu.addAction(save_action)
@@ -169,9 +169,11 @@ class MattesController(MatteDialog):
             selection = pmc.ls(sl=True)
             for i in xrange(count):
                 item = self.obj_list.item(i)
-                if (item.pynode in selection
-                    or item.pynode.getParent() in selection
-                ):
+                conditions = [
+                    item.pynode in selection,
+                    item.pynode.getParent() in selection
+                ]
+                if any(conditions):
                     item.setSelected(True)
                 else:
                     item.setSelected(False)
@@ -221,7 +223,7 @@ class MattesController(MatteDialog):
         self.new_matte_item(aov)
 
     def new_matte_item(self, aov):
-        item = QtGui.QListWidgetItem()
+        item = QtWidgets.QListWidgetItem()
         item.pynode = aov
 
         widget = MatteWidget(aov.name)
@@ -330,7 +332,7 @@ class MattesController(MatteDialog):
         dialog = MatteSaveDialog(self)
 
         for matte in MatteAOV.ls():
-            item = QtGui.QListWidgetItem(matte.name)
+            item = QtWidgets.QListWidgetItem(matte.name)
             item.matte = matte
             dialog.matte_list.addItem(item)
 
@@ -349,7 +351,7 @@ class MattesController(MatteDialog):
             if not os.path.exists(mattes_dir):
                 os.makedirs(mattes_dir)
 
-            filepath, filters = QtGui.QFileDialog.getSaveFileName(
+            filepath, filters = QtWidgets.QFileDialog.getSaveFileName(
                 self,
                 'Save Matte AOVS',
                 mattes_path,
@@ -365,10 +367,9 @@ class MattesController(MatteDialog):
     def load(self):
 
         scene = pmc.sceneName()
-        mattes_name = os.path.splitext(os.path.basename(scene))[0]
         mattes_dir = os.path.join(os.path.dirname(scene), 'mattes')
 
-        filepath, filters = QtGui.QFileDialog.getOpenFileName(
+        filepath, filters = QtWidgets.QFileDialog.getOpenFileName(
             self,
             'Load Matte AOVS',
             mattes_dir,
@@ -384,7 +385,7 @@ class MattesController(MatteDialog):
         dialog = MatteLoadDialog(self)
 
         for matte_data in data:
-            item = QtGui.QListWidgetItem(matte_data['name'])
+            item = QtWidgets.QListWidgetItem(matte_data['name'])
             item.matte_data = matte_data
             dialog.matte_list.addItem(item)
 

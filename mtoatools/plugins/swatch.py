@@ -1,8 +1,7 @@
 from tempfile import NamedTemporaryFile
-from collections import Sequence, OrderedDict
 import os
 import sys
-from PySide import QtGui
+from Qt import QtWidgets, QtGui
 try:
     from OpenGL.GL import *
     pyopengl_enabled = True
@@ -18,6 +17,7 @@ import maya.OpenMayaRender as omr1
 
 def maya_useNewAPI():
     pass
+
 
 TEXTURE_MANAGER = omr.MRenderer.getTextureManager()
 
