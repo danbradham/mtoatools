@@ -20,7 +20,6 @@ except KeyError:
 os.environ['MAYA_PLUG_IN_PATH'] = plugin_path
 
 
-
 def get_module(mod_path, filepath):
     '''Compile a plugin module
 
