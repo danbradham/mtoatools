@@ -5,6 +5,13 @@ History
 =======
 
 
+0.5.3 (04112018)
+----------------
+
+* Update shelf icons for Maya 2018
+* Fix missing imports in setup.py testit and cheeseit commands
+
+
 0.3.0 (03312016)
 ----------------
 

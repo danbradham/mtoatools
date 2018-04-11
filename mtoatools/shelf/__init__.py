@@ -1,6 +1,6 @@
 import os
 from maya import mel, cmds
-from Qt import QtWidgets, QtGui
+from Qt import QtGui
 from functools import partial
 from collections import OrderedDict
 
@@ -15,7 +15,7 @@ buttons = OrderedDict({
         ),
         'sourceType': 'python',
         'style': 'iconOnly',
-        'image': shelf_path('mtoatools_mattes.png'),
+        'image': shelf_path('mtoatools_mattes_1x1.png'),
         'annotation': 'AOV Matte management',
         'enableCommandRepeat': False,
         'useAlpha': True,
@@ -29,7 +29,7 @@ buttons = OrderedDict({
         ),
         'sourceType': 'python',
         'style': 'iconOnly',
-        'image': shelf_path('mtoatools_hdrig.png'),
+        'image': shelf_path('mtoatools_hdrig_1x1.png'),
         'annotation': 'HDR Light Rig',
         'enableCommandRepeat': False,
         'useAlpha': True,
@@ -43,7 +43,7 @@ buttons = OrderedDict({
         ),
         'sourceType': 'python',
         'style': 'iconOnly',
-        'image': shelf_path('mtoatools_patches.png'),
+        'image': shelf_path('mtoatools_patches_1x1.png'),
         'annotation': 'AOV Matte management',
         'enableCommandRepeat': False,
         'useAlpha': True,
@@ -57,7 +57,7 @@ buttons = OrderedDict({
         ),
         'sourceType': 'python',
         'style': 'iconOnly',
-        'image': shelf_path('mtoatools_docs.png'),
+        'image': shelf_path('mtoatools_docs_1x1.png'),
         'annotation': 'documentation',
         'enableCommandRepeat': False,
         'useAlpha': True,

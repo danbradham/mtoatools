@@ -3,7 +3,8 @@
 
 import re
 from setuptools import setup, find_packages
-import os
+from subprocess import check_call
+import shutil
 import sys
 
 if sys.argv[-1] == 'cheeseit!':
@@ -33,7 +34,8 @@ def get_info(pyfile):
 
     return info
 
-info = get_info('mtoatools/__init__.py')
+
+info = get_info('./mtoatools/__init__.py')
 
 
 with open("README.rst") as f:
