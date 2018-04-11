@@ -12,9 +12,11 @@ if sys.argv[-1] == 'cheeseit!':
         check_call('python setup.py sdist bdist_wheel')
         check_call('twine upload dist/*')
     finally:
-        shutil.rmtree('dist')
-        shutil.rmtree('build')
-        shutil.rmtree('mtoatools.egg-info')
+        for d in ['dist', 'build', 'mtoatools.egg-info']:
+            try:
+                shutil.rmtree(d)
+            except:
+                continue
     sys.exit()
 elif sys.argv[-1] == 'testit!':
     check_call('python setup.py sdist bdist_wheel upload -r pypitest')
